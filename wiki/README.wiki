@@ -1,4 +1,4 @@
-#summary README
+
 
 This page contains some basic information about setting-up and using CREST.  It contains roughly the same information as the README file distributed with CREST.
 
@@ -21,7 +21,7 @@ home page.  Contact jburnim@cs.berkeley.edu for details.
 
 CREST is run on an instrumented program as:
 {{{
-    bin/run_crest PROGRAM NUM_ITERATIONS -STRATEGY
+bin/run_crest PROGRAM NUM_ITERATIONS -STRATEGY
 }}}
 
 Possibly strategies include: dfs, cfg, random, uniform_random, random_input.
@@ -29,25 +29,25 @@ Some strategies take optional parameters.
 
 Example commands to test the "test/uniform_test.c" program:
 {{{
-    cd test
-    ../bin/crestc uniform_test.c
-    ../bin/run_crest ./uniform_test 10 -dfs
+cd test
+../bin/crestc uniform_test.c
+../bin/run_crest ./uniform_test 10 -dfs
 }}}
 
 This should produce output roughly like:
 {{{
-    ... [GARBAGE] ...
-    Read 8 branches.
-    Read 13 nodes.
-    Wrote 6 branch edges.
+... [GARBAGE] ...
+Read 8 branches.
+Read 13 nodes.
+Wrote 6 branch edges.
 
-    Iteration 0 (0s): covered 0 branches [0 reach funs, 0 reach branches].
-    Iteration 1 (0s): covered 1 branches [1 reach funs, 8 reach branches].
-    Iteration 2 (0s): covered 3 branches [1 reach funs, 8 reach branches].
-    Iteration 3 (0s): covered 5 branches [1 reach funs, 8 reach branches].
-    Iteration 4 (0s): covered 7 branches [1 reach funs, 8 reach branches].
-    GOAL!
-    Iteration 5 (0s): covered 8 branches [1 reach funs, 8 reach branches].
+Iteration 0 (0s): covered 0 branches [0 reach funs, 0 reach branches].
+Iteration 1 (0s): covered 1 branches [1 reach funs, 8 reach branches].
+Iteration 2 (0s): covered 3 branches [1 reach funs, 8 reach branches].
+Iteration 3 (0s): covered 5 branches [1 reach funs, 8 reach branches].
+Iteration 4 (0s): covered 7 branches [1 reach funs, 8 reach branches].
+GOAL!
+Iteration 5 (0s): covered 8 branches [1 reach funs, 8 reach branches].
 }}}
 
 NOTE: run_crest and crestc currently leave a lot of files lying
@@ -80,4 +80,3 @@ parsing, analyzing, and transforming C programs.  CIL is written by
 George Necula, Scott McPeak, Wes Weimer, Ben Liblit, and Matt Harren.
 It is also distributed under the revised BSD license.  See cil/LICENSE
 for details.
-
