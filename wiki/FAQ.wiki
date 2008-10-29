@@ -1,5 +1,7 @@
 #summary Frequenty Asked Questions
 
+=== ===
+
 == Can CREST be used on multi-file programs? ==
 
 Yes.  The easiest way to do this is to use CIL to merge all of the source files into a single file, and then run crestc on the merged file.
@@ -30,3 +32,47 @@ As an example, for GNU grep 2.2, it is sufficient to patch `src/Makefile` with (
 and then to simply run `make` in the `src/` directory.  This will produce a combined source file `grep_comb.c`, as well as executable `grep`.
 
 (Changing AUTOMAKE should not be necessary, but I cannot get this to work on my machine without this change.)
+
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== Does CREST save the exact set of branches that it covers during testing? ==
+
+Yes.  These branches are written to the file `coverage` in the working directory.  The file is a list of branch identifier numbers, one per line.
+
+Unfortunately, it is somewhat difficult to match these identifier numbers back to branches in the program under test.  Currently, the only way to do this is to find the branch ID numbers in the CIL-instrumented source for the test program.  (When run on a file `test.c`, `crestc` produces an instrumented source file `test.cil.c`.)  Every branch in the instrumented file will contain an instrumentation call:
+{{{
+__CrestBranch(statement-id, branch-id, true/false);
+}}}
+For example, the call
+{{{
+if (a == 0) {
+  __CrestBranch(47, 18, 1);
+  ...
+}}}
+indicates that this branch has identifier 18 (and is the "true" branch of the conditional `if (a == 0)`).
+
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== Does CREST save the test inputs it generates? ==
+
+No. CREST does not currently save the inputs it generates during testing.
+
+If you need this feature, it can be implemented by adding only a few lines of code to `src/run_crest/concolic_search.cc`.  In method `Search::RunProgram()`, just before the call to `LaunchProgram()`, add:
+{{{
+  // Save the given inputs.
+  char fname[32];
+  snprintf(fname, 32, "input.%d", num_iters_);
+  WriteInputToFileOrDie(fname, inputs);
+}}}
