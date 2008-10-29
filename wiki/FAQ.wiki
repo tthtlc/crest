@@ -1,0 +1,32 @@
+#summary Frequenty Asked Questions
+
+== Can CREST be used on multi-file programs? ==
+
+Yes.  The easiest way to do this is to use CIL to merge all of the source files into a single file, and then run crestc on the merged file.
+
+For further information on merging souce files with CIL, see (from the CIL documentation): [http://hal.cs.berkeley.edu/cil/merger.html Using the merger].
+
+As an example, for GNU grep 2.2, it is sufficient to patch `src/Makefile` with (after running `configure`):
+
+{{{
+45c45
+< AUTOMAKE = automake
+---
+> AUTOMAKE = echo
+63c63
+< CC = gcc
+---
+> CC = cilly
+116c116
+< LDFLAGS = 
+---
+> LDFLAGS = --merge --keepmerged
+133c133
+< CFLAGS = -g -O2
+---
+> CFLAGS = --merge -g -O2
+}}}
+
+and then to simply run `make` in the `src/` directory.  This will produce a combined source file `grep_comb.c`, as well as executable `grep`.
+
+(Changing AUTOMAKE should not be necessary, but I cannot get this to work on my machine without this change.)
