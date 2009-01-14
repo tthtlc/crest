@@ -76,3 +76,42 @@ If you need this feature, it can be implemented by adding only a few lines of co
   snprintf(fname, 32, "input.%d", num_iters_);
   WriteInputToFileOrDie(fname, inputs);
 }}}
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== How do I run CREST on the GNU grep example? ==
+
+Once you have compiled/instrumented grep, use:
+{{{
+  run_crest './grep aaaaaaaaaa /dev/null' 100 -random
+}}}
+
+This runs grep with a regexp/pattern of 10 symbolic characters.  The output should look something like:
+{{{
+  Iteration 0 (0s): covered 0 branches [0 reach funs, 0 reach branches].
+  RESET
+
+  Iteration 1 (0s): covered 446 branches [40 reach funs, 2448 reach branches].
+  Solved 690/1455
+
+
+  Iteration 2 (0s): covered 459 branches [40 reach funs, 2448 reach branches].
+  Solved 10/1122
+  |
+  ...
+}}}
+
+
+(We modified grep so that it makes the regular expression symbolic, but
+it still expects grep to be run with a regexp argument to specify the
+length.  E.g., above "aaaaaaaaaa" indicates a symbolic regexp of length 10.)
+
+Similarly, although no characters will be read from the given file --
+symbolic characters will be read instead -- a file argument must still
+be given.  And grep must be able to open this file.  /dev/null
+should always work.)
