@@ -2,6 +2,30 @@
 
 === ===
 
+== Can CREST be used under Cygwin? ==
+
+Yes, but two changes are necessary to build CREST under Cygwin.
+
+First, `addr_t` cannot be used as a typedef under Cygwin, so all uses of `addr_t` must be renamed.  This can be done with `sed`:
+{{{
+sed -i -e 's/addr_t/addr2_t/g' src/*/*
+}}} 
+
+
+Second, there is no separate `rt` library under Cygwin, so `-lrt` must be removed from `LOADLIBeS` in `src/Makefile`:
+{{{
+8c8
+< LOADLIBES = -lyices -lrt
+---
+> LOADLIBES = -lyices
+}}}
+
+=== ===
+
+=== ===
+
+=== ===
+
 == Can CREST be used on multi-file programs? ==
 
 Yes.  The easiest way to do this is to use CIL to merge all of the source files into a single file, and then run crestc on the merged file.
