@@ -1,5 +1,5 @@
 
-YICES_DIR=/home/jburnim/yices-1.0.11
+YICES_DIR=/home/sudeep/yices
 
 CC=$(CXX)
 CFLAGS = -I. -I$(YICES_DIR)/include -Wall -O2
@@ -20,7 +20,7 @@ all: libcrest/libcrest.a run_crest/run_crest \
 libcrest/libcrest.a: libcrest/crest.o $(BASE_LIBS)
 	$(AR) rsv $@ $^
 
-run_crest/run_crest: run_crest/concolic_search.o $(BASE_LIBS)
+run_crest/run_crest: run_crest/concolic_search.o  $(BASE_LIBS)
 
 tools/print_execution: $(BASE_LIBS)
 

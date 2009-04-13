@@ -50,6 +50,12 @@ class Search {
   unsigned int num_covered_;
   unsigned int total_num_covered_;
 
+  // NEW: Tracking the longest paths taken so far
+  unsigned int length_longest_path_;
+  unsigned int num_longest_path_;
+  vector<SymbolicPath> longest_paths_;
+  //END NEW
+
   vector<bool> reached_;
   vector<unsigned int> branch_count_;
   function_id_t max_function_;
@@ -77,7 +83,7 @@ class Search {
 
  private:
   const string program_;
-  const int max_iters_; 
+  const int max_iters_;
   int num_iters_;
 
   /*
@@ -128,7 +134,7 @@ class RandomInputSearch : public Search {
   virtual ~RandomInputSearch();
 
   virtual void Run();
-  
+
  private:
   SymbolicExecution ex_;
 };
