@@ -8,6 +8,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See LICENSE
 // for details.
 
+// Authors: Jacob Burnim (jburnim@cs.berkeley.edu)
+//			Sudeep Juvekar (sjuvekar@cs.berkeley.edu)
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
@@ -65,6 +67,12 @@ Search::Search(const string& program, int max_iterations)
     branches_.reserve(100000);
     branch_count_.reserve(100000);
     branch_count_.push_back(0);
+
+    //NEW : Tracking longest paths found
+    length_longest_path_ = 0;
+    num_longest_path_ = 0;
+    longest_paths_.reserve(100000);
+    //END NEW
 
     ifstream in("branches");
     assert(in);
@@ -131,6 +139,7 @@ Search::Search(const string& program, int max_iterations)
   // Print out the initial coverage.
   fprintf(stderr, "Iteration 0 (0s): covered %u branches [%u reach funs, %u reach branches].\n",
           num_covered_, reachable_functions_, reachable_branches_);
+  fprintf(stderr, "\t\tlongest path length = %u, number of longest paths = %u.\n", length_longest_path_, num_longest_path_);
 
   // Sort the branches.
   sort(branches_.begin(), branches_.end());
@@ -224,7 +233,34 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
 			    set<branch_id_t>* new_branches) {
 
   const unsigned int prev_covered_ = num_covered_;
-  const vector<branch_id_t>& branches = ex.path().branches();
+  const SymbolicPath &path = ex.path();
+  const vector<branch_id_t>& branches = path.branches();
+  unsigned int total_branches = branches.size();
+
+  // NEW : Track the longest path
+  if(total_branches > length_longest_path_) {
+	  length_longest_path_ = total_branches;
+	  num_longest_path_ = 1;
+	  longest_paths_.clear();
+	  longest_paths_.push_back(path);
+  }
+  else if(total_branches == length_longest_path_) {
+	  //Search in the longest path
+	  bool flag = false;
+	  /*
+	  for(int i =0; i < (int)longest_paths_.size(); i++) {
+		  SymbolicPath p = longest_paths_[i];
+		  if(p.equals(path)) {
+			  flag = true;
+			  break;
+		  }
+	  }*/
+	  if(!flag) {
+		num_longest_path_++;
+		longest_paths_.push_back(path);
+	  }
+  }
+
   for (BranchIt i = branches.begin(); i != branches.end(); ++i) {
     if ((*i > 0) && !covered_[*i]) {
       covered_[*i] = true;
@@ -246,6 +282,7 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
 
   fprintf(stderr, "Iteration %d (%lds): covered %u branches [%u reach funs, %u reach branches].\n",
 	  num_iters_, time(NULL)-start_time_, total_num_covered_, reachable_functions_, reachable_branches_);
+  fprintf(stderr, "\t\tlongest path length = %u, number of longest paths = %u.\n", length_longest_path_, num_longest_path_);
 
   bool found_new_branch = (num_covered_ > prev_covered_);
   if (found_new_branch) {

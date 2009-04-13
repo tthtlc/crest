@@ -76,7 +76,7 @@ void readCfg(graph_t* graph) {
     line_in >> src;
     line_in.get();
 
-    if (graph->size() <= src)
+    if ((int)graph->size() <= src)
       graph->resize(src+1);
     adj_list_t& nbhrs = (*graph)[src];
 
@@ -103,7 +103,7 @@ void dijkstra_bounded_shortest_paths
 (const graph_t& g, int src, vector<size_t>& dist_map, size_t max_dist) {
 
   // Initialize all distances.
-  for (int i = 0; i < g.size(); i++) {
+  for (int i = 0; i < (int)g.size(); i++) {
     dist_map[i] = numeric_limits<size_t>::max();
   }
   dist_map[src] = 0;
