@@ -12,6 +12,8 @@
 #ifndef LIBCREST_CREST_H__
 #define LIBCREST_CREST_H__
 
+#include <stdlib.h>
+
 /*
  * During instrumentation, the folowing function calls are inserted in the
  * C code under test.
@@ -103,6 +105,12 @@
  *   [We pass the conrete value and have signed/unsigned versions only
  *   to make it easier to exactly capture/print the concrete inputs to
  *   the program under test.]
+ *
+ * - When loading and storing structs, arrays, unions, or other
+ *   aggregates (the only operations that can be performed on
+ *   aggregates), the type is __CREST_AGGREGATE and the value is the
+ *   size of the aggregate in bytes.
+ *
  */
 
 #ifdef __cplusplus
@@ -126,6 +134,7 @@
 #define __CREST_ADDR unsigned long int
 
 #define __CREST_OP int
+#define __CREST_TYPE int
 #define __CREST_BOOL unsigned char
 
 /*
@@ -133,7 +142,7 @@
  *
  * TODO(jburnim): Arithmetic versus bitwise right shift?
  */
-typedef enum {
+enum {
   /* binary arithmetic */
   __CREST_ADD       =  0,
   __CREST_SUBTRACT  =  1,
@@ -162,6 +171,17 @@ typedef enum {
   __CREST_NEGATE    = 19,
   __CREST_NOT       = 20,
   __CREST_L_NOT     = 21,
+  /* cast */
+  __CREST_CAST      = 22,
+};
+
+enum {
+  __CREST_U_CHAR = 0,       __CREST_CHAR = 1,
+  __CREST_U_SHORT = 2,      __CREST_SHORT = 3,
+  __CREST_U_INT = 4,        __CREST_INT = 5,
+  __CREST_U_LONG = 6,       __CREST_LONG = 7,
+  __CREST_U_LONG_LONG = 8,  __CREST_LONG_LONG = 9,
+  __CREST_AGGREGATE = 10,
 };
 
 /*
@@ -172,17 +192,22 @@ typedef enum {
 
 /*
  * Instrumentation functions.
+ *
+ * (Could also clone these for each type: uint8, int8, ..., uint64, int64.)
  */
-EXTERN void __CrestInit() __SKIP;
-EXTERN void __CrestLoad(__CREST_ID, __CREST_ADDR, __CREST_VALUE) __SKIP;
+EXTERN void __CrestInit(__CREST_ID) __SKIP;
+EXTERN void __CrestRegGlobal(__CREST_ID, __CREST_ADDR, size_t) __SKIP;
+EXTERN void __CrestLoad(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestLoadAggr(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
 EXTERN void __CrestStore(__CREST_ID, __CREST_ADDR) __SKIP;
 EXTERN void __CrestClearStack(__CREST_ID) __SKIP;
-EXTERN void __CrestApply1(__CREST_ID, __CREST_OP, __CREST_VALUE) __SKIP;
-EXTERN void __CrestApply2(__CREST_ID, __CREST_OP, __CREST_VALUE) __SKIP;
+EXTERN void __CrestApply1(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestApply2(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestPtrApply2(__CREST_ID, __CREST_OP, size_t, __CREST_VALUE) __SKIP;
 EXTERN void __CrestBranch(__CREST_ID, __CREST_BRANCH_ID, __CREST_BOOL) __SKIP;
 EXTERN void __CrestCall(__CREST_ID, __CREST_FUNCTION_ID) __SKIP;
 EXTERN void __CrestReturn(__CREST_ID) __SKIP;
-EXTERN void __CrestHandleReturn(__CREST_ID, __CREST_VALUE) __SKIP;
+EXTERN void __CrestHandleReturn(__CREST_ID,  __CREST_TYPE, __CREST_VALUE) __SKIP;
 
 /*
  * Functions (macros) for obtaining symbolic inputs.

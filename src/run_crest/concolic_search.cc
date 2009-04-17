@@ -322,6 +322,9 @@ void Search::RandomInput(const map<var_t,type_t>& vars, vector<value_t>* input) 
       input->at(it->first) = (unsigned long long)val; break;
     case types::LONG_LONG:
       input->at(it->first) = (long long)val; break;
+    case types::STRUCT:
+      // ???
+      break;
     }
   }
 }

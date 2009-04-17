@@ -45,11 +45,14 @@ compare_op_t NegateCompareOp(compare_op_t op);
 // C numeric types.
 
 namespace types {
-enum type_t { U_CHAR = 0,       CHAR = 1,
-	      U_SHORT = 2,      SHORT = 3,
-	      U_INT = 4,        INT = 5,
-	      U_LONG = 6,       LONG = 7,
-	      U_LONG_LONG = 8,  LONG_LONG = 9 };
+enum type_t {
+  U_CHAR = 0,       CHAR = 1,
+  U_SHORT = 2,      SHORT = 3,
+  U_INT = 4,        INT = 5,
+  U_LONG = 6,       LONG = 7,
+  U_LONG_LONG = 8,  LONG_LONG = 9,
+  STRUCT = 10
+};
 }
 using types::type_t;
 

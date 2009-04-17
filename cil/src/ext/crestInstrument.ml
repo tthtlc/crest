@@ -10,6 +10,7 @@
  *)
 
 open Cil
+open Formatcil
 
 (*
  * Utilities that should be in the O'Caml standard libraries.
@@ -184,8 +185,11 @@ let shouldSkipFunction f = hasAttribute "crest_skip" f.vattr
 let prependToBlock (is : instr list) (b : block) =
   b.bstmts <- mkStmt (Instr is) :: b.bstmts
 
-let isSymbolicType ty = isIntegralType (unrollType ty)
-
+(* Should we instrument sub-expressions of a given type? *)
+let isSymbolicType ty =
+  match (unrollType ty) with
+   | TInt _ | TPtr _ | TEnum _ -> true
+   | _ -> false
 
 (* These definitions must match those in "libcrest/crest.h". *)
 let idType   = intType
@@ -195,7 +199,7 @@ let valType  = TInt (ILongLong, [])
 let addrType = TInt (IULong, [])
 let boolType = TInt (IUChar, [])
 let opType   = intType  (* enum *)
-
+let typeType = intType  (* enum *)
 
 (*
  * normalizeConditionalsVisitor ensures that every if block has an
@@ -271,6 +275,29 @@ let hasAddress (_, off) =
   in
     not (containsBitField off)
 
+let idArg   = ("id",   idType,        [])
+let bidArg  = ("bid",  bidType,       [])
+let fidArg  = ("fid",  fidType,       [])
+let valArg  = ("val",  valType,       [])
+let addrArg = ("addr", addrType,      [])
+let opArg   = ("op",   opType,        [])
+let boolArg = ("b",    boolType,      [])
+let typeArg = ("type", typeType,      [])
+let sizeArg () = ("size", !typeOfSizeOf, [])
+
+let mkInstFunc f name args =
+  let ty = TFun (voidType, Some (idArg :: args), false, []) in
+  let func = findOrCreateFunc f ("__Crest" ^ name) ty in
+    func.vstorage <- Extern ;
+    func.vattr <- [Attr ("crest_skip", [])] ;
+    func
+
+let mkInstCall func args =
+  let args' = integer (getNewId ()) :: args in
+    Call (None, Lval (var func), args', locUnknown)
+
+let toAddr e = CastE (addrType, e)
+
 
 class crestInstrumentVisitor f =
   (*
@@ -280,40 +307,23 @@ class crestInstrumentVisitor f =
    * code will grab the varinfo's from the included declarations.
    * Otherwise, it will create declarations for these functions.
    *)
-  let idArg   = ("id",   idType,   []) in
-  let bidArg  = ("bid",  bidType,  []) in
-  let fidArg  = ("fid",  fidType,  []) in
-  let valArg  = ("val",  valType,  []) in
-  let addrArg = ("addr", addrType, []) in
-  let opArg   = ("op",   opType,   []) in
-  let boolArg = ("b",    boolType, []) in
-
-  let mkInstFunc name args =
-    let ty = TFun (voidType, Some (idArg :: args), false, []) in
-    let func = findOrCreateFunc f ("__Crest" ^ name) ty in
-      func.vstorage <- Extern ;
-      func.vattr <- [Attr ("crest_skip", [])] ;
-      func
-  in
-
-  let loadFunc         = mkInstFunc "Load"  [addrArg; valArg] in
-  let storeFunc        = mkInstFunc "Store" [addrArg] in
-  let clearStackFunc   = mkInstFunc "ClearStack" [] in
-  let apply1Func       = mkInstFunc "Apply1" [opArg; valArg] in
-  let apply2Func       = mkInstFunc "Apply2" [opArg; valArg] in
-  let branchFunc       = mkInstFunc "Branch" [bidArg; boolArg] in
-  let callFunc         = mkInstFunc "Call" [fidArg] in
-  let returnFunc       = mkInstFunc "Return" [] in
-  let handleReturnFunc = mkInstFunc "HandleReturn" [valArg] in
+  let loadFunc         = mkInstFunc f "Load" [addrArg; typeArg; valArg] in
+  let loadAggrFunc     = mkInstFunc f "LoadAggr" [addrArg; typeArg; sizeArg ()] in
+  let derefFunc        = mkInstFunc f "Deref" [addrArg; typeArg; valArg] in
+  let storeFunc        = mkInstFunc f "Store" [addrArg] in
+  let writeFunc        = mkInstFunc f "Write" [addrArg] in
+  let clearStackFunc   = mkInstFunc f "ClearStack" [] in
+  let apply1Func       = mkInstFunc f "Apply1" [opArg; typeArg; valArg] in
+  let apply2Func       = mkInstFunc f "Apply2" [opArg; typeArg; valArg] in
+  let ptrApply2Func    = mkInstFunc f "PtrApply2" [opArg; sizeArg (); valArg] in
+  let branchFunc       = mkInstFunc f "Branch" [bidArg; boolArg] in
+  let callFunc         = mkInstFunc f "Call" [fidArg] in
+  let returnFunc       = mkInstFunc f "Return" [] in
+  let handleReturnFunc = mkInstFunc f "HandleReturn" [typeArg; valArg] in
 
   (*
    * Functions to create calls to the above instrumentation functions.
    *)
-  let mkInstCall func args =
-    let args' = integer (getNewId ()) :: args in
-      Call (None, Lval (var func), args', locUnknown)
-  in
-
   let unaryOpCode op =
     let c =
       match op with
@@ -321,6 +331,8 @@ class crestInstrumentVisitor f =
     in
       integer c
   in
+
+  let castOp = integer 22 in
 
   let binaryOpCode op =
     let c =
@@ -331,12 +343,17 @@ class crestInstrumentVisitor f =
         | Eq      -> 12  | Ne      -> 13  | Gt    -> 14  | Le    -> 15
         | Lt      -> 16  | Ge      -> 17
             (* Other/unhandled operators discarded and treated concretely. *)
+            (* Have to handle "pointer - pointer" and "pointer +/- int". *)
         | _ -> 18
     in
       integer c
   in
 
-  let toAddr e = CastE (addrType, e) in
+  let isPointerOp op =
+    match op with
+      | PlusPI | IndexPI | MinusPI | MinusPP -> true
+      | _ -> false
+  in
 
   let toValue e =
       if isPointerType (typeOf e) then
@@ -345,49 +362,160 @@ class crestInstrumentVisitor f =
         CastE (valType, e)
   in
 
-  let mkLoad addr value    = mkInstCall loadFunc [toAddr addr; toValue value] in
-  let mkStore addr         = mkInstCall storeFunc [toAddr addr] in
-  let mkClearStack ()      = mkInstCall clearStackFunc [] in
-  let mkApply1 op value    = mkInstCall apply1Func [unaryOpCode op; toValue value] in
-  let mkApply2 op value    = mkInstCall apply2Func [binaryOpCode op; toValue value] in
-  let mkBranch bid b       = mkInstCall branchFunc [integer bid; integer b] in
-  let mkCall fid           = mkInstCall callFunc [integer fid] in
-  let mkReturn ()          = mkInstCall returnFunc [] in
-  let mkHandleReturn value = mkInstCall handleReturnFunc [toValue value] in
+  let toType ty =
+    let tyCode =
+      match (unrollType ty) with
+        | TInt (IUChar,     _) ->  0
+        | TInt (ISChar,     _) ->  1
+        | TInt (IChar,      _) ->  1   (* we assume 'char' is signed *)
+        | TInt (IUShort,    _) ->  2
+        | TInt (IShort,     _) ->  3
+        | TInt (IUInt,      _) ->  4
+        | TInt (IInt,       _) ->  5
+        | TInt (IULong,     _) ->  6
+        | TInt (ILong,      _) ->  7
+        | TInt (IULongLong, _) ->  8
+        | TInt (ILongLong,  _) ->  9
+        (* TODO(jburnim): Is unsigned long correct for pointers? *)
+        | TPtr _               ->  6
+        (* TODO(jburnim): Is int32 correct for enums? *)
+        | TEnum _              ->  5
+        (* Arrays, structures, and unions are "aggregates". *)
+        | TArray _             -> 10
+        | TComp _              -> 10
+        | _ -> invalid_arg "toType"
+    in
+      integer tyCode
+  in
 
+  let mkLoad addr ty v    = mkInstCall loadFunc [toAddr addr; toType ty; toValue v] in
+  let mkLoadAggr addr ty  = mkInstCall loadAggrFunc [toAddr addr; toType ty; sizeOf ty] in
+  let mkDeref addr ty v   = mkInstCall derefFunc [toAddr addr; toType ty; toValue v] in
+  let mkStore addr        = mkInstCall storeFunc [toAddr addr] in
+  let mkWrite addr        = mkInstCall writeFunc [toAddr addr] in
+  let mkClearStack ()     = mkInstCall clearStackFunc [] in
+  let mkCast ty v         = mkInstCall apply1Func [castOp; toType ty; toValue v] in
+  let mkApply1 op ty v    = mkInstCall apply1Func [unaryOpCode op; toType ty; toValue v] in
+  let mkApply2 op ty v    = mkInstCall apply2Func [binaryOpCode op; toType ty; toValue v] in
+  let mkPtrApply2 op sz v = mkInstCall ptrApply2Func [binaryOpCode op; sz; toValue v] in
+  let mkBranch bid b      = mkInstCall branchFunc [integer bid; integer b] in
+  let mkCall fid          = mkInstCall callFunc [integer fid] in
+  let mkReturn ()         = mkInstCall returnFunc [] in
+  let mkHandleReturn ty v = mkInstCall handleReturnFunc [toType ty; toValue v] in
+
+  (*
+   * Could the given lvalue have a symbolic address?
+   *)
+  let isSymbolicLvalue lv =
+    let rec isSymbolicOffset off =
+      match off with
+        | NoOffset         -> false
+        | Index (e, off')  -> true   (* NOTE: Could skip constant offsets. *)
+        | Field (_, off')  -> isSymbolicOffset off'
+    in
+      match lv with
+        | (Mem m, off) -> true
+        | (Var v, off) -> isSymbolicOffset off
+  in
+
+  (*
+   * Return the expression for the concrete value to load in a load or deref
+   * instruction.  For lvalues of primitive type, this is the actual concrete
+   * value.  But for structs or enums, this is the *size* of the lvalue.
+   *)
+  let loadValue lv =
+    let ty = typeOfLval lv in
+      match ty with
+        | TComp _ -> sizeOf ty
+        | _ ->       Lval lv
+  in
+
+  (*
+   * Instrument an lvalue.
+   *
+   * Generates instrumentation which puts the lvalue's address on the stack.
+   *)
+  let rec instrumentLvalueAddr lv =
+    let lv', off = removeOffsetLval lv in
+      match off with
+        | NoOffset     ->
+            ((* Load address of the lvalue's host. *)
+             match lv with
+               | (Var v, _) -> [mkLoad noAddr (typeOf (addressOf lv)) (addressOf lv)]
+               | (Mem e, _) -> instrumentExpr e)
+        | Index (e, _) ->
+            (instrumentLvalueAddr lv')
+            @ (instrumentExpr e)
+            @ [mkPtrApply2 IndexPI (sizeOf (typeOfLval lv)) (addressOf lv)]
+(*
+            @ [mkLoad noAddr addrType (sizeOf (typeOf lv')) ;
+               mkApply2 Mult addrType zero ;
+               mkApply2 PlusA addrType (addressOf lv)]
+ *)
+        | Field (f, _) ->
+            let fieldOff = cExp "&%l:lv1 - &%l:lv2" [("lv1", Fl lv); ("lv2", Fl lv')] in
+              (instrumentLvalueAddr lv')
+              @ [mkLoad noAddr !typeOfSizeOf fieldOff ;
+                 mkPtrApply2 IndexPI one (addressOf lv)]
 
   (*
    * Instrument an expression.
    *)
-  let rec instrumentExpr e =
+  and instrumentExpr e =
+    let ty = typeOf e in
     if isConstant e then
-      [mkLoad noAddr e]
+      [mkLoad noAddr ty e]
     else
       match e with
         | Lval lv when hasAddress lv ->
-            [mkLoad (addressOf lv) e]
+            (* If reading the lvalue might involve a dereference of a
+             * symbolic pointer, then instrument the lvalue's address
+             * and do a dereference. Otherwise, just do a load. *)
+            if (isSymbolicLvalue lv) then
+              (instrumentLvalueAddr lv)
+              @ [mkDeref (addressOf lv) ty e]
+            else
+              [mkLoad (addressOf lv) ty e]
 
-        | UnOp (op, e, _) ->
-            (* Should skip this if we don't currently handle 'op'. *)
-            (instrumentExpr e) @ [mkApply1 op e]
+        | UnOp (op, e', _) ->
+            (* Should skip this if we don't currently handle 'op'? *)
+            (instrumentExpr e') @ [mkApply1 op ty e]
+
+        | BinOp (op, e1, e2, _) when isPointerOp op ->
+            let TPtr (baseTy, _) = unrollType (typeOf e1) in
+              (instrumentExpr e1) @ (instrumentExpr e2)
+              @ [mkPtrApply2 op (sizeOf baseTy) e]
+
+(*
+        | BinOp (MinusPP, e1, e2, _) ->
+            let TPtr (baseTy, _) = unrollType (typeOf e1) in
+            let diff = cExp "(%e:e1-%e:e2)*sizeof(%t:t)"
+                            [("e1", e1), ("e2", e2), ("t", baseTy)] in
+              (instrumentExpr e1) @ (instrumentExpr e2)
+              @ [mkApply2 MinusA addrType diff ;
+                 mkLoad noAddr addrType sizeOf(baseTy) ;
+                 mkApply2 Div addrType e]
+ *)
 
         | BinOp (op, e1, e2, _) ->
-            (* Should skip this if we don't currently handle 'op'. *)
-            (instrumentExpr e1) @ (instrumentExpr e2) @ [mkApply2 op e]
+            (* Should skip this if we don't currently handle 'op'? *)
+            (instrumentExpr e1) @ (instrumentExpr e2) @ [mkApply2 op ty e]
 
-        | CastE (_, e) ->
-            (* We currently treat cast's as no-ops, which is not precise. *)
-            instrumentExpr e
+        | CastE (_, e') ->
+            (instrumentExpr e') @ [mkCast ty e]
 
-        (* Default case: We cannot instrument, so generate a concrete load
-         * and stop recursing. *)
-        | _ -> [mkLoad noAddr e]
+        | AddrOf lv ->
+            instrumentLvalueAddr lv
+
+        | StartOf lv ->
+            instrumentLvalueAddr lv
+
+        (* Default case: sizeof() and __alignof__() expressions. *)
+        | _ -> [mkLoad noAddr ty e]
   in
-
 
 object (self)
   inherit nopCilVisitor
-
 
   (*
    * Instrument a statement (branch or function return).
@@ -416,17 +544,22 @@ object (self)
 
       | _ -> DoChildren
 
-
   (*
    * Instrument assignment and call statements.
    *)
   method vinst(i) =
     match i with
-      | Set (lv, e, _) ->
-          if (isSymbolicType (typeOf e)) && (hasAddress lv) then
+      | Set (lv, e, _) when (true && hasAddress lv) (*type is ok, lv has addr *) ->
+          if (isSymbolicLvalue lv) then
+            (self#queueInstr (instrumentLvalueAddr lv) ;
+             self#queueInstr (instrumentExpr e) ;
+             self#queueInstr [mkWrite (addressOf lv)] ;
+             SkipChildren)
+          else
+            (* If lv is an aggregate, it must be a struct/union. *)
             (self#queueInstr (instrumentExpr e) ;
-             self#queueInstr [mkStore (addressOf lv)]) ;
-          SkipChildren
+             self#queueInstr [mkStore (addressOf lv)] ;
+             SkipChildren)
 
       (* Don't instrument calls to functions marked as uninstrumented. *)
       | Call (_, Lval (Var f, NoOffset), _, _)
@@ -440,7 +573,7 @@ object (self)
             (match ret with
                | Some lv when ((isSymbolicLval lv) && (hasAddress lv)) ->
                    ChangeTo [i ;
-                             mkHandleReturn (Lval lv) ;
+                             mkHandleReturn (typeOfLval lv) (Lval lv) ;
                              mkStore (addressOf lv)]
                | _ ->
                    ChangeTo [i ; mkClearStack ()])
@@ -467,22 +600,36 @@ object (self)
 
 end
 
+let registerGlobals f =
+  let regGlobalFunc = mkInstFunc f "RegGlobal" [addrArg; sizeArg ()] in
+  let mkRegGlobal addr sz = mkInstCall regGlobalFunc [toAddr addr; sz] in
+  let isIndexableType ty =
+    match ty with
+      | TArray _ | TComp _ -> isCompleteType ty
+      | _ -> false
+  in
+  let registerGlobal glob =
+    match glob with
+      | GVarDecl (v, _) when (v.vstorage == Extern) && isIndexableType v.vtype ->
+          Some (mkRegGlobal (addressOf (var v)) (sizeOf v.vtype))
+      | GVar (v, _, _) when isIndexableType v.vtype ->
+          Some (mkRegGlobal (addressOf (var v)) (sizeOf v.vtype))
+      | _ -> None
+  in
+    mapOptional registerGlobal f.globals
 
 let addCrestInitializer f =
-  let crestInitTy = TFun (voidType, Some [], false, []) in
-  let crestInitFunc = findOrCreateFunc f "__CrestInit" crestInitTy in
+  let crestInitFunc = mkInstFunc f "Init" [] in
   let globalInit = getGlobInit f in
     crestInitFunc.vstorage <- Extern ;
     crestInitFunc.vattr <- [Attr ("crest_skip", [])] ;
-    prependToBlock [Call (None, Lval (var crestInitFunc), [], locUnknown)]
-                   globalInit.sbody
-
+    prependToBlock (registerGlobals f) globalInit.sbody ;
+    prependToBlock [mkInstCall crestInitFunc []] globalInit.sbody
 
 let prepareGlobalForCFG glob =
   match glob with
-    GFun(func, _) -> prepareCFG func
-  | _ -> ()
-
+    | GFun(func, _) -> prepareCFG func
+    | _ -> ()
 
 let feature : featureDescr =
   { fd_name = "CrestInstrument";

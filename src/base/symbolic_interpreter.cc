@@ -55,7 +55,7 @@ void SymbolicInterpreter::DumpMemory() {
     } else if ((i == stack_.size() - 1) && pred_) {
       pred_->AppendToString(&s);
     }
-    fprintf(stderr, "s%d: %lld [ %s ]\n", i, stack_[i].concrete, s.c_str());
+    fprintf(stderr, "s%zu: %lld [ %s ]\n", i, stack_[i].concrete, s.c_str());
   }
 }
 

@@ -103,7 +103,7 @@ void dijkstra_bounded_shortest_paths
 (const graph_t& g, int src, vector<size_t>& dist_map, size_t max_dist) {
 
   // Initialize all distances.
-  for (int i = 0; i < (int)g.size(); i++) {
+  for (size_t i = 0; i < g.size(); i++) {
     dist_map[i] = numeric_limits<size_t>::max();
   }
   dist_map[src] = 0;
@@ -147,13 +147,13 @@ int main(void) {
   // Read in the set of branches.
   set<int> branches;
   readBranches(&branches);
-  fprintf(stderr, "Read %d branches.\n", branches.size());
+  fprintf(stderr, "Read %zu branches.\n", branches.size());
 
   // Read in the CFG.
   graph_t cfg;
   cfg.reserve(1000000);
   readCfg(&cfg);
-  fprintf(stderr, "Read %d nodes.\n", cfg.size());
+  fprintf(stderr, "Read %zu nodes.\n", cfg.size());
 
   // Set the length of every edge to 1 if the destination is a branch,
   // and zero otherwise.
