@@ -55,6 +55,7 @@ int main(int argc, char* argv[]) {
     }
   } else {
     fprintf(stderr, "Unknown search strategy: %s\n", search_type.c_str());
+    return 1;
   }
 
   strategy->Run();
