@@ -18,6 +18,7 @@
 #include <string>
 
 #include "base/basic_types.h"
+#include "base/linear_expression.h"
 
 using std::istream;
 using std::map;
@@ -26,6 +27,12 @@ using std::set;
 using std::string;
 
 namespace crest {
+
+namespace node {
+	enum op_type {UNARY, BINARY, DEREF};
+	enum node_type {LINEAR, NONLINEAR};
+}
+using namespace node;
 
 class SymbolicExpr {
  public:
@@ -41,12 +48,15 @@ class SymbolicExpr {
   // Copy constructor.
   SymbolicExpr(const SymbolicExpr& e);
 
+  //COnstruct a symbolic expression from left, right, and types
+  SymbolicExpr(SymbolicExpr *l, SymbolicExpr *r, op_type op,
+		  node_type no, ops::binary_op_t binop, ops::unary_op_t unop, LinearExpr exp);
   // Desctructor.
   ~SymbolicExpr();
 
   void Negate();
-  bool IsConcrete() const { return coeff_.empty(); }
-  size_t Size() const { return (1 + coeff_.size()); }
+  bool IsConcrete() const { return ( node_type_ == LINEAR && expr_.IsConcrete() ); }
+  size_t Size();
   void AppendVars(set<var_t>* vars) const;
   bool DependsOn(const map<var_t,type_t>& vars) const;
 
@@ -56,21 +66,34 @@ class SymbolicExpr {
   bool Parse(istream& s);
 
   // Arithmetic operators.
-  const SymbolicExpr& operator+=(const SymbolicExpr& e);
-  const SymbolicExpr& operator-=(const SymbolicExpr& e);
+  const SymbolicExpr& operator+=(SymbolicExpr& e);
+  const SymbolicExpr& operator-=(SymbolicExpr& e);
   const SymbolicExpr& operator+=(value_t c);
   const SymbolicExpr& operator-=(value_t c);
   const SymbolicExpr& operator*=(value_t c);
   bool operator==(const SymbolicExpr& e) const;
+  SymbolicExpr& applyUnary(ops::unary_op_t op); //The operator is other than Negate
+  SymbolicExpr& applyBinary(SymbolicExpr &e, ops::binary_op_t op); //The operator is other than +,-and constant multiply
+  SymbolicExpr& applyDeref(); // Pointer deref
 
   // Accessors.
-  value_t const_term() const { return const_; }
-  const map<var_t,value_t>& terms() const { return coeff_; }
+  value_t const_term();
+  const map<var_t,value_t>& terms();
   typedef map<var_t,value_t>::const_iterator TermIt;
-
+  LinearExpr linear_expr() {return expr_; }
+  node_type get_node_type() {return node_type_;}
+  op_type get_op_type() { return op_type_; }
+  ops::binary_op_t get_binary_op() { return binary_op_; };
+  ops::unary_op_t get_unary_op() { return unary_op_; }
+  SymbolicExpr *getLeft() { return left_;}
+  SymbolicExpr *getRight() { return right_;}
  private:
-  value_t const_;
-  map<var_t,value_t> coeff_;
+	 LinearExpr expr_;
+	 SymbolicExpr *left_, *right_;
+	 op_type op_type_;
+	 node_type node_type_;
+	 ops::binary_op_t binary_op_;
+	 ops::unary_op_t unary_op_;
 };
 
 }  // namespace crest

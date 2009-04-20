@@ -8,6 +8,10 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See LICENSE
 // for details.
 
+/***
+ * Author: Jacob Burnim (jburnim@cs.berkeley.edu)
+ * 		   Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
+ */
 #include <assert.h>
 #include <queue>
 #include <set>
@@ -144,15 +148,23 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
   { // Constraints.
     vector<yices_expr> terms;
     for (PredIt i = constraints.begin(); i != constraints.end(); ++i) {
-      const SymbolicExpr& se = (*i)->expr();
+      SymbolicExpr& se = (SymbolicExpr&)(*i)->expr();
       terms.clear();
-      terms.push_back(yices_mk_num(ctx, se.const_term()));
+
+      /***
+       * NEW: If the expression is linear, then simple call a linear solver.
+       * If it's a tree, then go to left and right choldren
+       */
+      yices_expr e;
+      Flatten(e, se, terms, ctx, x_expr);
+
+      /*terms.push_back(yices_mk_num(ctx, se.const_term()));
       for (SymbolicExpr::TermIt j = se.terms().begin(); j != se.terms().end(); ++j) {
 	yices_expr prod[2] = { x_expr[j->first], yices_mk_num(ctx, j->second) };
 	terms.push_back(yices_mk_mul(ctx, prod, 2));
       }
       yices_expr e = yices_mk_sum(ctx, &terms.front(), terms.size());
-
+       */
       yices_expr pred;
       switch((*i)->op()) {
       case ops::EQ:  pred = yices_mk_eq(ctx, e, zero); break;
@@ -184,6 +196,68 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
   return success;
 }
 
+void YicesSolver::SolveLinear(yices_expr &e, LinearExpr &lin_exp, vector<yices_expr> &terms,
+		yices_context &ctx, map<var_t, yices_expr> &x_expr) {
+	terms.push_back(yices_mk_num(ctx, lin_exp.const_term()));
+	for(LinearExpr::TermIt j = lin_exp.terms().begin(); j != lin_exp.terms().end(); j++) {
+		yices_expr prod[2] = {x_expr[j->first], yices_mk_num(ctx, j->second) };
+		terms.push_back(yices_mk_mul(ctx, prod, 2));
+	}
+	e = yices_mk_sum(ctx, &terms.front(), terms.size());
+}
+
+void YicesSolver::Flatten(yices_expr &e, SymbolicExpr &se, vector<yices_expr> &terms,
+		yices_context &ctx, map<var_t, yices_expr> &x_expr) {
+	/***
+	 * If the expression is Linear, call SolveLinear
+	 * Else, case split on the operator
+	 */
+	if(se.get_node_type() == LINEAR) {
+		LinearExpr lin_exp = se.linear_expr();
+		SolveLinear(e, lin_exp, terms, ctx, x_expr);
+	}
+	else {
+		unsigned temp_n = 0;
+		yices_expr e1, e2;
+		if(se.get_op_type() == BINARY) {
+			switch(se.get_binary_op()) {
+			case ops::SHIFT_L:
+				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
+				temp_n = (unsigned) ( (se.getRight())->const_term()); //ASSUME: the constant term in rh subtree is offset
+				e = yices_mk_bv_shift_left0(ctx, e, temp_n);
+				break;
+			case ops::SHIFT_R:
+				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
+				temp_n = (unsigned) ( (se.getRight())->const_term()); //ASSUME: the constant term in rh subtree is offset
+				e = yices_mk_bv_shift_right0(ctx, e, temp_n);
+				break;
+			case ops::ADD:
+				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
+				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
+				e = yices_mk_bv_add(ctx, e1, e2);
+				break;
+			case ops::SUBTRACT:
+				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
+				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
+				e = yices_mk_bv_sub(ctx, e1, e2);
+				break;
+			case ops::MULTIPLY:
+
+			break;
+			default:
+				fprintf(stderr, "Unknown binary operator: %d\n", se.get_binary_op());
+				exit(1);
+				break;
+			};
+		}
+		else if(se.get_op_type() == UNARY) {
+
+		}
+		else {
+
+		}
+	}
+}
 
 }  // namespace crest
 

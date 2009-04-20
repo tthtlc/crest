@@ -147,8 +147,8 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op, value_t value) 
     switch (op) {
     case ops::ADD:
       if (a.expr == NULL) {
-	swap(a, b);
-	*a.expr += b.concrete;
+    	  swap(a, b);
+    	  *a.expr += b.concrete;
       } else if (b.expr == NULL) {
 	*a.expr += b.concrete;
       } else {
@@ -182,6 +182,32 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op, value_t value) 
 	delete b.expr;
       }
       break;
+
+    case ops::SHIFT_L:
+    	if(a.expr == NULL) {
+    		value_t temp_value = a.concrete<<b.concrete;
+    		*a.expr = SymbolicExpr(temp_value);
+    		delete b.expr;
+    	}
+    	else {
+    		SymbolicExpr temp(b.concrete);
+    		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_L);
+    		delete b.expr;
+    	}
+    break;
+
+	case ops::SHIFT_R:
+		if(a.expr == NULL) {
+			value_t temp_value = a.concrete>>b.concrete;
+		  	*a.expr = SymbolicExpr(temp_value);
+	  		delete b.expr;
+	  	}
+	 	else {
+	   		SymbolicExpr temp(b.concrete);
+	   		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_R);
+	   		delete b.expr;
+	   	}
+	break;
 
     default:
       // Concrete operator.
@@ -233,6 +259,9 @@ void SymbolicInterpreter::ApplyCompareOp(id_t id, compare_op_t op, value_t value
   IFDEBUG(DumpMemory());
 }
 
+  //void SymbolicInterpreter::ApplyDeref() {
+    //STUB
+  //}
 
 void SymbolicInterpreter::Call(id_t id, function_id_t fid) {
   ex_.mutable_path()->Push(kCallId);

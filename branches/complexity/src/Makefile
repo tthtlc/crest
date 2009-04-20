@@ -10,7 +10,7 @@ LOADLIBES = -lyices -lrt
 BASE_LIBS = base/basic_types.o base/symbolic_execution.o \
             base/symbolic_interpreter.o base/symbolic_path.o \
             base/symbolic_predicate.o base/symbolic_expression.o \
-            base/yices_solver.o
+            base/linear_expression.o base/yices_solver.o
 
 
 all: libcrest/libcrest.a run_crest/run_crest \
