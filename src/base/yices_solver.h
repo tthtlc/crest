@@ -13,6 +13,7 @@
 
 #include <map>
 #include <vector>
+#include <yices_c.h>
 
 #include "base/basic_types.h"
 #include "base/symbolic_predicate.h"
@@ -35,6 +36,13 @@ class YicesSolver {
 
   static bool ReadSolutionFromFileOrDie(const string& file,
                                         map<var_t,value_t>* soln);
+
+ private:
+	 static void SolveLinear(yices_expr &e, LinearExpr &lin_exp, vector<yices_expr> &terms,
+			 yices_context &ctx, map<var_t, yices_expr> &x_expr);
+
+	 static void Flatten(yices_expr &e, SymbolicExpr &se, vector<yices_expr> &terms,
+				 yices_context &ctx, map<var_t, yices_expr> &x_expr);
 };
 
 }  // namespace crest

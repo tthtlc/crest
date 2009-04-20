@@ -31,7 +31,7 @@ static const branch_id_t kReturnId = -2;
 
 namespace ops {
 enum compare_op_t { EQ = 0, NEQ = 1, GT = 2, LE = 3, LT = 4, GE = 5 };
-enum binary_op_t { ADD, SUBTRACT, MULTIPLY, CONCRETE };
+enum binary_op_t { ADD, SUBTRACT, MULTIPLY, CONCRETE, SHIFT_L, SHIFT_R };
 enum unary_op_t { NEGATE, LOGICAL_NOT, BITWISE_NOT };
 }  // namespace ops
 
