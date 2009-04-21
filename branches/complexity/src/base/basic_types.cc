@@ -71,5 +71,18 @@ const value_t kMaxValue[] = {
   numeric_limits<long long>::max(),
 };
 
+const size_t kSizeOfType[] = {
+  sizeof(unsigned char),
+  sizeof(signed char),
+  sizeof(unsigned short),
+  sizeof(short),
+  sizeof(unsigned int),
+  sizeof(int),
+  sizeof(unsigned long int),
+  sizeof(long int),
+  sizeof(unsigned long long int),
+  sizeof(long long int),
+};
+
 }  // namespace crest
 

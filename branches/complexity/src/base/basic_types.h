@@ -11,6 +11,8 @@
 #ifndef BASE_BASIC_TYPES_H__
 #define BASE_BASIC_TYPES_H__
 
+#include <cstddef>
+
 namespace crest {
 
 typedef int id_t;
@@ -61,6 +63,8 @@ extern const char* kMaxValueStr[];
 
 extern const value_t kMinValue[];
 extern const value_t kMaxValue[];
+
+extern const size_t kSizeOfType[];
 
 }  // namespace crest
 
