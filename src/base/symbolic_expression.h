@@ -13,6 +13,7 @@
 
 #include <istream>
 #include <map>
+#include <vector>
 #include <ostream>
 #include <set>
 #include <string>
@@ -25,6 +26,7 @@ using std::map;
 using std::ostream;
 using std::set;
 using std::string;
+using std::vector;
 
 namespace crest {
 
@@ -48,14 +50,15 @@ class SymbolicExpr {
   // Copy constructor.
   SymbolicExpr(const SymbolicExpr& e);
 
-  //COnstruct a symbolic expression from left, right, and types
+  //Construct a symbolic expression from left, right, and types
   SymbolicExpr(SymbolicExpr *l, SymbolicExpr *r, op_type op,
-		  node_type no, ops::binary_op_t binop, ops::unary_op_t unop, LinearExpr exp);
+		  node_type no, ops::binary_op_t binop, ops::unary_op_t unop, LinearExpr *exp,
+		  value_t v);
   // Desctructor.
   ~SymbolicExpr();
 
   void Negate();
-  bool IsConcrete() const { return ( node_type_ == LINEAR && expr_.IsConcrete() ); }
+  bool IsConcrete() const { return ( node_type_ == LINEAR && expr_->IsConcrete() ); }
   size_t Size();
   void AppendVars(set<var_t>* vars) const;
   bool DependsOn(const map<var_t,type_t>& vars) const;
@@ -80,20 +83,29 @@ class SymbolicExpr {
   value_t const_term();
   const map<var_t,value_t>& terms();
   typedef map<var_t,value_t>::const_iterator TermIt;
-  LinearExpr linear_expr() {return expr_; }
+  LinearExpr *linear_expr() {return expr_; }
   node_type get_node_type() {return node_type_;}
   op_type get_op_type() { return op_type_; }
   ops::binary_op_t get_binary_op() { return binary_op_; };
   ops::unary_op_t get_unary_op() { return unary_op_; }
   SymbolicExpr *getLeft() { return left_;}
   SymbolicExpr *getRight() { return right_;}
+  value_t getValue() { return value_; }
+  types::type_t getType() { return type_; }
+
  private:
-	 LinearExpr expr_;
+	 LinearExpr *expr_;
 	 SymbolicExpr *left_, *right_;
 	 op_type op_type_;
 	 node_type node_type_;
 	 ops::binary_op_t binary_op_;
 	 ops::unary_op_t unary_op_;
+	 types::type_t type_;
+	 value_t value_;
+	 vector<SymbolicExpr> symbolic_writes_;
+
+	 static value_t Apply(ops::binary_op_t bin_op, value_t v1, value_t v2);
+	 static value_t Apply(ops::unary_op_t un_op, value_t v);
 };
 
 }  // namespace crest
