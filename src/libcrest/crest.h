@@ -198,8 +198,9 @@ enum {
 EXTERN void __CrestInit(__CREST_ID) __SKIP;
 EXTERN void __CrestRegGlobal(__CREST_ID, __CREST_ADDR, size_t) __SKIP;
 EXTERN void __CrestLoad(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
-EXTERN void __CrestLoadAggr(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestDeref(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
 EXTERN void __CrestStore(__CREST_ID, __CREST_ADDR) __SKIP;
+EXTERN void __CrestWrite(__CREST_ID, __CREST_ADDR) __SKIP;
 EXTERN void __CrestClearStack(__CREST_ID) __SKIP;
 EXTERN void __CrestApply1(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
 EXTERN void __CrestApply2(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;

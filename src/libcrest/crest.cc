@@ -182,16 +182,20 @@ void __CrestLoad(__CREST_ID id, __CREST_ADDR addr,
 }
 
 
-void __CrestLoadAggr(__CREST_ID id, __CREST_ADDR addr,
-                     __CREST_TYPE ty, size_t size) {
-  // TODO: Load an aggregate value -- i.e. a struct.  No operations
-  // will be performed on it except possibly eventually storing it.
+void __CrestDeref(__CREST_ID id, __CREST_ADDR addr,
+                  __CREST_TYPE ty, __CREST_VALUE val) {
+  // TODO:
+
 }
 
 
 void __CrestStore(__CREST_ID id, __CREST_ADDR addr) {
   if (!pre_symbolic)
     SI->Store(id, addr);
+}
+
+void __CrestWrite(__CREST_ID id, __CREST_ADDR addr) {
+  // TODO:
 }
 
 

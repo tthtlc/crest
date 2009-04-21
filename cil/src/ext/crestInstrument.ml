@@ -388,9 +388,15 @@ class crestInstrumentVisitor f =
       integer tyCode
   in
 
-  let mkLoad addr ty v    = mkInstCall loadFunc [toAddr addr; toType ty; toValue v] in
-  let mkLoadAggr addr ty  = mkInstCall loadAggrFunc [toAddr addr; toType ty; sizeOf ty] in
-  let mkDeref addr ty v   = mkInstCall derefFunc [toAddr addr; toType ty; toValue v] in
+  let loadVal ty v =
+    if isSymbolicType ty then
+      toValue v
+    else
+      sizeOf ty
+  in
+
+  let mkLoad addr ty v    = mkInstCall loadFunc [toAddr addr; toType ty; loadVal ty v] in
+  let mkDeref addr ty v   = mkInstCall derefFunc [toAddr addr; toType ty; loadVal ty v] in
   let mkStore addr        = mkInstCall storeFunc [toAddr addr] in
   let mkWrite addr        = mkInstCall writeFunc [toAddr addr] in
   let mkClearStack ()     = mkInstCall clearStackFunc [] in
@@ -401,7 +407,8 @@ class crestInstrumentVisitor f =
   let mkBranch bid b      = mkInstCall branchFunc [integer bid; integer b] in
   let mkCall fid          = mkInstCall callFunc [integer fid] in
   let mkReturn ()         = mkInstCall returnFunc [] in
-  let mkHandleReturn ty v = mkInstCall handleReturnFunc [toType ty; toValue v] in
+  let mkHandleReturn ty v = mkInstCall handleReturnFunc [toType ty; loadVal ty v] in
+
 
   (*
    * Could the given lvalue have a symbolic address?
