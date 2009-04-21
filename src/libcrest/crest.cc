@@ -178,14 +178,14 @@ void __CrestRegGlobal(__CREST_ID id, __CREST_ADDR addr, size_t size) {
 void __CrestLoad(__CREST_ID id, __CREST_ADDR addr,
                  __CREST_TYPE ty, __CREST_VALUE val) {
   if (!pre_symbolic)
-    SI->Load(id, addr, val);
+    SI->Load(id, addr, static_cast<type_t>(ty), val);
 }
 
 
 void __CrestDeref(__CREST_ID id, __CREST_ADDR addr,
                   __CREST_TYPE ty, __CREST_VALUE val) {
-  // TODO:
-
+  if (!pre_symbolic)
+    SI->Deref(id, addr, static_cast<type_t>(ty), val);
 }
 
 
@@ -195,7 +195,8 @@ void __CrestStore(__CREST_ID id, __CREST_ADDR addr) {
 }
 
 void __CrestWrite(__CREST_ID id, __CREST_ADDR addr) {
-  // TODO:
+  if (!pre_symbolic)
+    SI->Write(id, addr);
 }
 
 
@@ -210,7 +211,10 @@ void __CrestApply1(__CREST_ID id, __CREST_OP op,
   assert((op >= __CREST_NEGATE) && (op <= __CREST_L_NOT));
 
   if (!pre_symbolic)
-    SI->ApplyUnaryOp(id, static_cast<unary_op_t>(kOpTable[op]), val);
+    SI->ApplyUnaryOp(id,
+                     static_cast<unary_op_t>(kOpTable[op]),
+                     static_cast<type_t>(ty),
+                     val);
 }
 
 
@@ -222,9 +226,15 @@ void __CrestApply2(__CREST_ID id, __CREST_OP op,
     return;
 
   if ((op >= __CREST_ADD) && (op <= __CREST_L_OR)) {
-    SI->ApplyBinaryOp(id, static_cast<binary_op_t>(kOpTable[op]), val);
+    SI->ApplyBinaryOp(id,
+                      static_cast<binary_op_t>(kOpTable[op]),
+                      static_cast<type_t>(ty),
+                      val);
   } else {
-    SI->ApplyCompareOp(id, static_cast<compare_op_t>(kOpTable[op]), val);
+    SI->ApplyCompareOp(id,
+                       static_cast<compare_op_t>(kOpTable[op]),
+                       static_cast<type_t>(ty),
+                       val);
   }
 }
 
@@ -237,7 +247,7 @@ void __CrestPtrApply2(__CREST_ID id, __CREST_OP op,
 void __CrestBranch(__CREST_ID id, __CREST_BRANCH_ID bid, __CREST_BOOL b) {
   if (pre_symbolic) {
     // Precede the branch with a fake (concrete) load.
-    SI->Load(id, 0, b);
+    SI->Load(id, 0, types::CHAR, b);
   }
 
   SI->Branch(id, bid, static_cast<bool>(b));
@@ -256,7 +266,7 @@ void __CrestReturn(__CREST_ID id) {
 
 void __CrestHandleReturn(__CREST_ID id, __CREST_TYPE ty, __CREST_VALUE val) {
   if (!pre_symbolic)
-    SI->HandleReturn(id, val);
+    SI->HandleReturn(id, static_cast<type_t>(ty), val);
 }
 
 

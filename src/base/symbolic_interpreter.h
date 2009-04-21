@@ -18,8 +18,10 @@
 #include <vector>
 
 #include "base/basic_types.h"
+#include "base/object_tracker.h"
 #include "base/symbolic_execution.h"
 #include "base/symbolic_expression.h"
+#include "base/symbolic_memory.h"
 #include "base/symbolic_path.h"
 #include "base/symbolic_predicate.h"
 
@@ -35,20 +37,22 @@ class SymbolicInterpreter {
   explicit SymbolicInterpreter(const vector<value_t>& input);
 
   void ClearStack(id_t id);
-  void Load(id_t id, addr_t addr, value_t value);
+  void Load(id_t id, addr_t addr, type_t ty, value_t value);
+  void Deref(id_t id, addr_t addr, type_t ty, value_t value);
   void Store(id_t id, addr_t addr);
+  void Write(id_t id, addr_t addr);
 
-  void ApplyUnaryOp(id_t id, unary_op_t op, value_t value);
-  void ApplyBinaryOp(id_t id, binary_op_t op, value_t value);
-  void ApplyCompareOp(id_t id, compare_op_t op, value_t value);
+  void ApplyUnaryOp(id_t id, unary_op_t op, type_t ty, value_t value);
+  void ApplyBinaryOp(id_t id, binary_op_t op, type_t ty, value_t value);
+  void ApplyCompareOp(id_t id, compare_op_t op, type_t ty, value_t value);
 
   void Call(id_t id, function_id_t fid);
   void Return(id_t id);
-  void HandleReturn(id_t id, value_t value);
+  void HandleReturn(id_t id, type_t ty, value_t value);
 
   void Branch(id_t id, branch_id_t bid, bool pred_value);
 
-  value_t NewInput(type_t type, addr_t addr);
+  value_t NewInput(type_t ty, addr_t addr);
 
   // Accessor for symbolic execution so far.
   const SymbolicExecution& execution() const { return ex_; }
@@ -60,8 +64,12 @@ class SymbolicInterpreter {
  private:
   struct StackElem {
     SymbolicExpr* expr;  // NULL to indicate concrete.
+    type_t ty;
     value_t concrete;
   };
+
+  // Symbolic objects.
+  ObjectTracker obj_tracker_;
 
   // Stack.
   vector<StackElem> stack_;
@@ -73,7 +81,7 @@ class SymbolicInterpreter {
   bool return_value_;
 
   // Memory map.
-  map<addr_t,SymbolicExpr*> mem_;
+  SymbolicMemory mem_;
 
   // The symbolic execution (program path and inputs).
   SymbolicExecution ex_;
@@ -82,9 +90,10 @@ class SymbolicInterpreter {
   unsigned int num_inputs_;
 
   // Helper functions.
-  inline void PushConcrete(value_t value);
-  inline void PushSymbolic(SymbolicExpr* expr, value_t value);
+  inline void PushConcrete(type_t ty, value_t value);
+  inline void PushSymbolic(SymbolicExpr* expr, type_t ty, value_t value);
   inline void ClearPredicateRegister();
+  inline size_t sizeOfType(type_t ty, value_t val);
 };
 
 }  // namespace crest
