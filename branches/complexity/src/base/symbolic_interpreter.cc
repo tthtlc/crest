@@ -102,7 +102,10 @@ void SymbolicInterpreter::Deref(id_t id, addr_t addr, type_t ty, value_t value) 
   const StackElem& se = stack_.back();
   if (obj && se.expr && !se.expr->IsConcrete()) {
     // TODO: Set e to new expression representing dereference.
+	// e will have op_type as DEREF and node type as UNARY_NODE
     // e = new SymbolicDeref(new SymbolicObject(obj), ty, se.expr);
+	  e = new SymbolicExpr(se.expr, NULL, DEREF, NONLINEAR, se.expr->get_binary_op(), se.expr->get_unary_op(), NULL, value);
+	  // Add the new symbolic object, address and type to e
   } else {
     delete se.expr;
   }
@@ -198,9 +201,14 @@ void SymbolicInterpreter::ApplyUnaryOp(id_t id, unary_op_t op,
       break;
     case ops::LOGICAL_NOT:
       if (pred_) {
-	pred_->Negate();
-	break;
+    	  pred_->Negate();
       }
+    break;
+
+    case ops::BITWISE_NOT:
+    	*se.expr = (*se.expr).applyUnary(ops::BITWISE_NOT);
+    	break;
+
       // Otherwise, fall through to the concrete case.
     default:
       // Concrete operator.
@@ -273,7 +281,7 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
     		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_L);
     		delete b.expr;
     	}
-    break;
+    	break;
 
 	case ops::SHIFT_R:
 		if(a.expr == NULL) {
@@ -286,7 +294,52 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
 	   		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_R);
 	   		delete b.expr;
 	   	}
-	break;
+		break;
+
+	case ops::BITWISE_AND:
+		if(a.expr == NULL) {
+			swap(a,b);
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_AND);
+		}
+		else if(b.expr == NULL) {
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_AND);
+		}
+		else {
+			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_AND);
+		}
+		break;
+
+	case ops::BITWISE_OR:
+		if(a.expr == NULL) {
+			swap(a,b);
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_OR);
+		}
+		else if(b.expr == NULL) {
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_OR);
+		}
+		else {
+			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_OR);
+		}
+		break;
+
+	case ops::BITWISE_XOR:
+		if(a.expr == NULL) {
+			swap(a,b);
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_XOR);
+		}
+		else if(b.expr == NULL) {
+			SymbolicExpr temp(b.concrete);
+			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_XOR);
+		}
+		else {
+			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_XOR);
+		}
+		break;
 
     default:
       // Concrete operator.

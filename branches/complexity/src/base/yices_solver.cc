@@ -213,7 +213,7 @@ void YicesSolver::Flatten(yices_expr &e, SymbolicExpr &se, vector<yices_expr> &t
 	 * Else, case split on the operator
 	 */
 	if(se.get_node_type() == LINEAR) {
-		LinearExpr lin_exp = se.linear_expr();
+		LinearExpr lin_exp = *se.linear_expr();
 		SolveLinear(e, lin_exp, terms, ctx, x_expr);
 	}
 	else {
@@ -226,21 +226,45 @@ void YicesSolver::Flatten(yices_expr &e, SymbolicExpr &se, vector<yices_expr> &t
 				temp_n = (unsigned) ( (se.getRight())->const_term()); //ASSUME: the constant term in rh subtree is offset
 				e = yices_mk_bv_shift_left0(ctx, e, temp_n);
 				break;
+
 			case ops::SHIFT_R:
 				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
 				temp_n = (unsigned) ( (se.getRight())->const_term()); //ASSUME: the constant term in rh subtree is offset
 				e = yices_mk_bv_shift_right0(ctx, e, temp_n);
 				break;
+
+			case ops::BITWISE_AND:
+				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
+				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
+				e = yices_mk_bv_and(ctx, e1, e2);
+				break;
+
+
+			case ops::BITWISE_OR:
+				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
+				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
+				e = yices_mk_bv_or(ctx, e1, e2);
+				break;
+
+
+			case ops::BITWISE_XOR:
+				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
+				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
+				e = yices_mk_bv_xor(ctx, e1, e2);
+				break;
+
 			case ops::ADD:
 				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
 				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
 				e = yices_mk_bv_add(ctx, e1, e2);
 				break;
+
 			case ops::SUBTRACT:
 				Flatten(e1, *(se.getLeft()), terms, ctx, x_expr);
 				Flatten(e2, *(se.getRight()), terms, ctx, x_expr);
 				e = yices_mk_bv_sub(ctx, e1, e2);
 				break;
+
 			case ops::MULTIPLY:
 
 			break;
@@ -251,7 +275,31 @@ void YicesSolver::Flatten(yices_expr &e, SymbolicExpr &se, vector<yices_expr> &t
 			};
 		}
 		else if(se.get_op_type() == UNARY) {
+			switch(se.get_unary_op()) {
 
+			case ops::NEGATE:
+				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
+				yices_expr temp[2];
+				temp[0] = yices_mk_num(ctx, 0);
+				temp[1] = e;
+				e = yices_mk_sub(ctx, temp, 2);
+				break;
+
+			case ops::LOGICAL_NOT:
+				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
+				e = yices_mk_not(ctx, e);
+				break;
+
+			case ops::BITWISE_NOT:
+				Flatten(e, *(se.getLeft()), terms, ctx, x_expr);
+				e = yices_mk_bv_not(ctx, e);
+				break;
+
+			default:
+				fprintf(stderr, "Unknown binary operator: %d\n", se.get_unary_op());
+				exit(1);
+				break;
+			}
 		}
 		else {
 
