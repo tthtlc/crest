@@ -30,6 +30,8 @@ using std::vector;
 
 namespace crest {
 
+class SymbolicObject;
+
 namespace node {
 	enum op_type {UNARY, BINARY, DEREF};
 	enum node_type {LINEAR, NONLINEAR};
@@ -56,6 +58,12 @@ class SymbolicExpr {
 		  value_t v);
   // Desctructor.
   ~SymbolicExpr();
+
+  // Factory methods for constructing symbolic expressions.
+  static SymbolicExpr* NewConcreteExpr(type_t ty, value_t val) { return NULL; }
+  static SymbolicExpr* NewConstDeref(const SymbolicObject& obj, addr_t addr, type_t ty, value_t val) { return NULL; }
+  static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2) { return NULL; }
+  static SymbolicExpr* ExtractByte(const SymbolicExpr& e, size_t i) { return NULL; }
 
   void Negate();
   bool IsConcrete() const { return ( node_type_ == LINEAR && expr_->IsConcrete() ); }
