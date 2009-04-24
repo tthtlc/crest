@@ -11,12 +11,18 @@
 #ifndef BASE_SYMBOLIC_MEMORY_H__
 #define BASE_SYMBOLIC_MEMORY_H__
 
+#include <ext/hash_map>
+
+#include "base/basic_types.h"
+
 namespace crest {
 
-class SymbolicExpression;
+class SymbolicExpr;
 
 class SymbolicMemory {
  public:
+  SymbolicMemory();
+  ~SymbolicMemory();
 
   // NOTE: Transfers ownership of the returned object to the caller.
   //
@@ -27,16 +33,17 @@ class SymbolicMemory {
   //
   // NOTE: The 'val' parameter is somewhat less weird if the resulting
   // symbolic expression must contain its own concrete value.
-  SymbolicExpr* read(addr_t addr, type_t ty, value_t val) {
-    return NULL;
-  }
+  SymbolicExpr* read(addr_t addr, type_t ty, value_t val) const;
 
   // NOTE: Transfers ownership of 'e' to this object.
   //
   // TODO: Remove 'ty' parameter if expression contains its own type.
-  void write(addr_t addr, type_t ty, SymbolicExpr* e) { }
+  void write(addr_t addr, type_t ty, SymbolicExpr* e);
 
-  void concretize(addr_t addr, size_t n) { }
+  void concretize(addr_t addr, size_t n);
+
+ private:
+  __gnu_cxx::hash_map<addr_t, SymbolicExpr*> mem_;
 };
 
 }
