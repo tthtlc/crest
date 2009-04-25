@@ -11,6 +11,14 @@
 #ifndef BASE_BASIC_TYPES_H__
 #define BASE_BASIC_TYPES_H__
 
+#ifndef RESULT_SIZE__
+#define RETURN_SIZE__(t1, t2) (t1>t2)?t1:t2
+#endif
+
+#ifndef SIZEOF_ULONG__
+#define SIZEOF_ULONG__ sizeof(unsigned long)
+#endif
+
 #include <cstddef>
 
 namespace crest {
@@ -33,7 +41,7 @@ static const branch_id_t kReturnId = -2;
 
 namespace ops {
 enum compare_op_t { EQ = 0, NEQ = 1, GT = 2, LE = 3, LT = 4, GE = 5 };
-enum binary_op_t { ADD, SUBTRACT, MULTIPLY, CONCRETE, SHIFT_L, SHIFT_R, BITWISE_AND, BITWISE_OR, BITWISE_XOR };
+enum binary_op_t { ADD, SUBTRACT, MULTIPLY, CONCRETE, SHIFT_L, SHIFT_R, BITWISE_AND, BITWISE_OR, BITWISE_XOR, CONCAT, EXTRACT };
 enum unary_op_t { NEGATE, LOGICAL_NOT, BITWISE_NOT };
 }  // namespace ops
 
@@ -48,6 +56,7 @@ compare_op_t NegateCompareOp(compare_op_t op);
 
 namespace types {
 enum type_t {
+	BOOLEAN = -1,
   U_CHAR = 0,       CHAR = 1,
   U_SHORT = 2,      SHORT = 3,
   U_INT = 4,        INT = 5,

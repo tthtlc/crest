@@ -322,6 +322,8 @@ void Search::RandomInput(const map<var_t,type_t>& vars, vector<value_t>* input) 
       input->at(it->first) = (unsigned long long)val; break;
     case types::LONG_LONG:
       input->at(it->first) = (long long)val; break;
+    case types::BOOLEAN:
+    	// ???
     case types::STRUCT:
       // ???
       break;
@@ -348,7 +350,9 @@ bool Search::SolveAtBranch(const SymbolicExecution& ex,
   map<var_t,value_t> soln;
   constraints[branch_idx]->Negate();
   // fprintf(stderr, "Yices . . . ");
-  bool success = YicesSolver::IncrementalSolve(ex.inputs(), ex.vars(), cs, &soln);
+  //bool success = YicesSolver::IncrementalSolve(ex.inputs(), ex.vars(), cs, &soln);
+  //TODO: Implement IncrementalSolve
+  bool success = YicesSolver::Solve(ex.vars(), cs, &soln);
   // fprintf(stderr, "%d\n", success);
   constraints[branch_idx]->Negate();
 

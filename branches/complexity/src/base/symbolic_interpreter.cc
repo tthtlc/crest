@@ -17,6 +17,8 @@
 #include "base/symbolic_interpreter.h"
 #include "base/symbolic_object.h"
 #include "base/yices_solver.h"
+#include "base/deref_expression.h"
+#include "base/basic_expression.h"
 
 using std::make_pair;
 using std::swap;
@@ -104,7 +106,7 @@ void SymbolicInterpreter::Deref(id_t id, addr_t addr, type_t ty, value_t value) 
     // TODO: Set e to new expression representing dereference.
 	// e will have op_type as DEREF and node type as UNARY_NODE
     // e = new SymbolicDeref(new SymbolicObject(obj), ty, se.expr);
-	  e = new SymbolicExpr(se.expr, NULL, DEREF, NONLINEAR, se.expr->get_binary_op(), se.expr->get_unary_op(), NULL, value);
+	  e = new DerefExpr(se.expr, obj, ty, value);
 	  // Add the new symbolic object, address and type to e
   } else {
     delete se.expr;
@@ -193,30 +195,8 @@ void SymbolicInterpreter::ApplyUnaryOp(id_t id, unary_op_t op,
   assert(stack_.size() >= 1);
   StackElem& se = stack_.back();
 
-  if (se.expr) {
-    switch (op) {
-    case ops::NEGATE:
-      se.expr->Negate();
-      ClearPredicateRegister();
-      break;
-    case ops::LOGICAL_NOT:
-      if (pred_) {
-    	  pred_->Negate();
-      }
-    break;
-
-    case ops::BITWISE_NOT:
-    	*se.expr = (*se.expr).applyUnary(ops::BITWISE_NOT);
-    	break;
-
-      // Otherwise, fall through to the concrete case.
-    default:
-      // Concrete operator.
-      delete se.expr;
-      se.expr = NULL;
-      ClearPredicateRegister();
-    }
-  }
+  if (se.expr)
+	  *(se.expr) = (*se.expr).applyUnary(op);
 
   se.concrete = value;
   IFDEBUG(DumpMemory());
@@ -230,125 +210,8 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
   StackElem& a = *(stack_.rbegin()+1);
   StackElem& b = stack_.back();
 
-  if (a.expr || b.expr) {
-    switch (op) {
-    case ops::ADD:
-      if (a.expr == NULL) {
-    	  swap(a, b);
-    	  *a.expr += b.concrete;
-      } else if (b.expr == NULL) {
-	*a.expr += b.concrete;
-      } else {
-	*a.expr += *b.expr;
-	delete b.expr;
-      }
-      break;
-
-    case ops::SUBTRACT:
-      if (a.expr == NULL) {
-	b.expr->Negate();
-	swap(a, b);
-	*a.expr += b.concrete;
-      } else if (b.expr == NULL) {
-	*a.expr -= b.concrete;
-      } else {
-	*a.expr -= *b.expr;
-	delete b.expr;
-      }
-      break;
-
-    case ops::MULTIPLY:
-      if (a.expr == NULL) {
-	swap(a, b);
-	*a.expr *= b.concrete;
-      } else if (b.expr == NULL) {
-	*a.expr *= b.concrete;
-      } else {
-	swap(a, b);
-	*a.expr *= b.concrete;
-	delete b.expr;
-      }
-      break;
-
-    case ops::SHIFT_L:
-    	if(a.expr == NULL) {
-    		value_t temp_value = a.concrete<<b.concrete;
-    		*a.expr = SymbolicExpr(temp_value);
-    		delete b.expr;
-    	}
-    	else {
-    		SymbolicExpr temp(b.concrete);
-    		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_L);
-    		delete b.expr;
-    	}
-    	break;
-
-	case ops::SHIFT_R:
-		if(a.expr == NULL) {
-			value_t temp_value = a.concrete>>b.concrete;
-		  	*a.expr = SymbolicExpr(temp_value);
-	  		delete b.expr;
-	  	}
-	 	else {
-	   		SymbolicExpr temp(b.concrete);
-	   		*a.expr = (*a.expr).applyBinary(temp, ops::SHIFT_R);
-	   		delete b.expr;
-	   	}
-		break;
-
-	case ops::BITWISE_AND:
-		if(a.expr == NULL) {
-			swap(a,b);
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_AND);
-		}
-		else if(b.expr == NULL) {
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_AND);
-		}
-		else {
-			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_AND);
-		}
-		break;
-
-	case ops::BITWISE_OR:
-		if(a.expr == NULL) {
-			swap(a,b);
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_OR);
-		}
-		else if(b.expr == NULL) {
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_OR);
-		}
-		else {
-			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_OR);
-		}
-		break;
-
-	case ops::BITWISE_XOR:
-		if(a.expr == NULL) {
-			swap(a,b);
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_XOR);
-		}
-		else if(b.expr == NULL) {
-			SymbolicExpr temp(b.concrete);
-			*a.expr = (*a.expr).applyBinary(temp, ops::BITWISE_XOR);
-		}
-		else {
-			*a.expr = (*a.expr).applyBinary(*b.expr, ops::BITWISE_XOR);
-		}
-		break;
-
-    default:
-      // Concrete operator.
-      delete a.expr;
-      delete b.expr;
-      a.expr = NULL;
-    }
-  }
-
+  if(a.expr || b.expr)
+	  *a.expr = (*a.expr).applyBinary(*b.expr, op);
   a.concrete = value;
   stack_.pop_back();
   ClearPredicateRegister();
@@ -363,29 +226,8 @@ void SymbolicInterpreter::ApplyCompareOp(id_t id, compare_op_t op,
   StackElem& a = *(stack_.rbegin()+1);
   StackElem& b = stack_.back();
 
-  if (a.expr || b.expr) {
-    // Symbolically compute "a -= b".
-    if (a.expr == NULL) {
-      b.expr->Negate();
-      swap(a, b);
-      *a.expr += b.concrete;
-    } else if (b.expr == NULL) {
-      *a.expr -= b.concrete;
-    } else {
-      *a.expr -= *b.expr;
-      delete b.expr;
-    }
-    // Construct a symbolic predicate (if "a - b" is symbolic), and
-    // store it in the predicate register.
-    if (!a.expr->IsConcrete()) {
-      pred_ = new SymbolicPred(op, a.expr);
-    } else {
-      ClearPredicateRegister();
-      delete a.expr;
-    }
-    // We leave a concrete value on the stack.
-    a.expr = NULL;
-  }
+  if (a.expr || b.expr)
+	  *a.expr = (*a.expr).applyCompare(*b.expr, op);
 
   a.concrete = value;
   stack_.pop_back();
@@ -447,7 +289,7 @@ value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
   assert(ty != types::STRUCT);
 
   // Construct new symbolic expr and concrete value of type 'ty'.
-  SymbolicExpr* e = NULL;
+  BasicExpr* e = NULL;
   value_t ret = 0;
 
   // Somehow combine bytes num_inputs_, ..., num_inputs+kSizeOfType[ty]-1,
