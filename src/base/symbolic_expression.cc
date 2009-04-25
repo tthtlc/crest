@@ -9,232 +9,73 @@
 // for details.
 
 /***
- * Author: Sudeep juvekar (sjuvekar@eecs.berkeley.edu
+ * Author: Sudeep juvekar (sjuvekar@eecs.berkeley.edu)
  * 4/17/09
  */
 #include <assert.h>
 #include "base/symbolic_expression.h"
+#include "base/unary_expression.h"
+#include "base/binary_expression.h"
+#include "base/compare_expression.h"
+#include "base/deref_expression.h"
+#include "base/symbolic_object.h"
 
 namespace crest {
 
 typedef map<var_t,value_t>::iterator It;
 typedef map<var_t,value_t>::const_iterator ConstIt;
 
-
-SymbolicExpr::~SymbolicExpr() { }
-
-SymbolicExpr::SymbolicExpr() {
-	expr_ = new LinearExpr(0);
-	node_type_ = LINEAR;
-}
-
-SymbolicExpr::SymbolicExpr(value_t c) {
-	expr_ = new LinearExpr(c);
-	node_type_ = LINEAR;
-}
-
-SymbolicExpr::SymbolicExpr(value_t c, var_t v) {
-	expr_ = new LinearExpr(c,v);
-	node_type_ = LINEAR;
-}
-
-SymbolicExpr::SymbolicExpr(const SymbolicExpr& e)
-  : expr_(e.expr_), left_(e.left_), right_(e.right_), op_type_(e.op_type_), node_type_(e.node_type_), value_(e.value_) { }
-
-SymbolicExpr::SymbolicExpr(SymbolicExpr *l, SymbolicExpr *r, op_type op,
-		  node_type no, ops::binary_op_t binop, ops::unary_op_t unop,
-		  LinearExpr *exp, value_t v)
-	: left_(l), right_(r), op_type_(op), node_type_(no), binary_op_(binop), unary_op_(unop), expr_(exp), value_(v) {;}
-
-size_t SymbolicExpr::Size() {
-	if(node_type_ == LINEAR) return expr_->Size();
-	else return 1 + left_->Size() + right_->Size();
-}
-
-value_t SymbolicExpr::const_term() {
-	if(node_type_ == LINEAR) return expr_->const_term();
-	return LONG_LONG_MIN;
-}
-
-const map<var_t,value_t>& SymbolicExpr::terms() {
-	if(node_type_ == LINEAR) return expr_->terms();
-	else {
-		if(op_type_ == UNARY) {
-			return left_->terms();
-		}
-		else {
-			map<var_t, value_t> *m = new map<var_t, value_t>();
-			return *m;
-		}
-	}
-}
-
-void SymbolicExpr::Negate() {
-	if(node_type_ == LINEAR) expr_->Negate();
-	else {
-		SymbolicExpr *c = new SymbolicExpr(left_, right_, op_type_, node_type_, binary_op_, unary_op_, NULL, 0 - value_);
-		right_ = NULL;
-		node_type_ = NONLINEAR;
-		op_type_ = UNARY;
-		unary_op_ = ops::NEGATE;
-		left_ = c;
-	}
-}
-
-void SymbolicExpr::AppendVars(set<var_t>* vars) const {
-  if(node_type_ == LINEAR)
-	  expr_->AppendVars(vars);
-}
-
-bool SymbolicExpr::DependsOn(const map<var_t,type_t>& vars) const {
-	if(node_type_ == LINEAR) {
-		if(expr_->DependsOn(vars)) return true;
-		return false;
-	}
-	else {
-		return left_->DependsOn(vars) || right_->DependsOn(vars);
-	}
-}
-
-void SymbolicExpr::AppendToString(string* s) const {
-
-	char buff[32];
-	if(node_type_ == LINEAR) expr_->AppendToString(s);
-	else {
-		if(op_type_ == UNARY){
-			sprintf(buff, "(%d ", unary_op_);
-			s->append(buff);
-			left_->AppendToString(s);
-		}
-		else if(op_type_ == BINARY) {
-			sprintf(buff, "(%d ", binary_op_);
-			s->append(buff);
-			left_->AppendToString(s);
-			right_->AppendToString(s);
-		}
-		s->push_back(')');
-	}
-}
-
-
-void SymbolicExpr::Serialize(string* s) const {
-  if(node_type_ == LINEAR) expr_->Serialize(s);
-  else {
-	  if(op_type_ == UNARY){
-		  s->push_back(static_cast<char>(unary_op_));
-		  left_->Serialize(s);
-	  }
-	  else if(op_type_ == BINARY) {
-		  s->push_back(static_cast<char>(binary_op_));
-		  left_->Serialize(s);
-		  right_->Serialize(s);
-	  }
-  }
-}
-
-
-bool SymbolicExpr::Parse(istream& s) {
-	if(node_type_ == LINEAR) return expr_->Parse(s);
-	else {
-		if(op_type_ == UNARY) {
-
-		}
-		else if(op_type_ == BINARY) {
-
-		}
-	}
-	return true;
-}
-
-
-const SymbolicExpr& SymbolicExpr::operator+=(SymbolicExpr& e) {
-	if(node_type_ == LINEAR && e.node_type_ == LINEAR) {
-		(*expr_) += (*e.expr_);
-		value_ += e.getValue();
-		return *this;
-	}
-	SymbolicExpr *c = new SymbolicExpr(this, &e, BINARY, NONLINEAR, ops::ADD, unary_op_, NULL, value_ + e.getValue());
-	return *c;
-}
-
-
-const SymbolicExpr& SymbolicExpr::operator-=(SymbolicExpr& e) {
-	if(node_type_ == LINEAR && e.node_type_ == LINEAR) {
-			(*expr_) -= (*e.expr_);
-			return *this;
-		}
-	SymbolicExpr *c = new SymbolicExpr(this, &e, BINARY, NONLINEAR, ops::SUBTRACT, unary_op_, NULL, value_ - e.getValue());
-	return *c;
-}
-
-const SymbolicExpr& SymbolicExpr::operator+=(value_t c) {
-	if(node_type_ == LINEAR) {
-			expr_ += c;
-			return *this;
-		}
-	SymbolicExpr *c1 = new SymbolicExpr(this, new SymbolicExpr(c), BINARY, NONLINEAR, ops::ADD, unary_op_, NULL, value_ + c);
-	return *c1;
-}
-
-
-const SymbolicExpr& SymbolicExpr::operator-=(value_t c) {
-	if(node_type_ == LINEAR) {
-			expr_ -= c;
-			return *this;
-	}
-	SymbolicExpr *c1 = new SymbolicExpr(this, new SymbolicExpr(c), BINARY, NONLINEAR, ops::SUBTRACT, unary_op_, NULL, value_ - c);
-	return *c1;
-}
-
-
-const SymbolicExpr& SymbolicExpr::operator*=(value_t c) {
-	if(node_type_ == LINEAR) {
-			*expr_ *= c;
-			return *this;
-		}
-	SymbolicExpr *c1 = new SymbolicExpr(this, new SymbolicExpr(c), BINARY, NONLINEAR, ops::MULTIPLY, unary_op_, NULL, value_ * c);
-	return *c1;
-}
-
-bool SymbolicExpr::operator==(const SymbolicExpr& e) const {
-	if(node_type_ == LINEAR && e.node_type_ == LINEAR) {
-		return expr_ == e.expr_;
-	}
-	return (*left_ == *(e.left_)) && (*right_ == *(e.right_));
-}
-
 SymbolicExpr& SymbolicExpr::applyUnary(ops::unary_op_t op) {
-	SymbolicExpr *c1 = new SymbolicExpr(this, NULL, UNARY, NONLINEAR, binary_op_, op, expr_, Apply(op, value_));
-	return *c1;
+	UnaryExpr *un_exp = new UnaryExpr(op, this, size_in_bytes_, Apply(op, value_));
+	return *un_exp;
 }
 
 SymbolicExpr& SymbolicExpr::applyBinary(SymbolicExpr &e, ops::binary_op_t op) {
-	SymbolicExpr *c1 = new SymbolicExpr(this, &e, BINARY, NONLINEAR, op, unary_op_, expr_, Apply(op, value_, e.getValue()));
-	return *c1;
+	BinaryExpr *bin_exp = new BinaryExpr(op, this, &e, RETURN_SIZE__(size_in_bytes_, e.size_in_bytes_), Apply(op, value_, e.value_));
+	return *bin_exp;
+}
+
+SymbolicExpr& SymbolicExpr::applyCompare(SymbolicExpr &e, ops::compare_op_t op) {
+	value_t res = (value_t)Apply(op, value_, e.value_);
+	CompareExpr *comp_exp = new CompareExpr(op, this, &e, 1, res);
+	return *comp_exp;
 }
 
 SymbolicExpr& SymbolicExpr::applyDeref() {
-	SymbolicExpr *c1 = new SymbolicExpr(left_, right_, BINARY, NONLINEAR, binary_op_, unary_op_, expr_, value_);
-	left_ = c1;
-	right_= NULL;
-	op_type_ = DEREF;
-	node_type_ = NONLINEAR;
-	expr_ = NULL;
-	value_ = (value_t)&value_;
-	//TODO: Append the the symbolic writes
-
-	return *this;
+	//TODO:
+	SymbolicExpr *temp = new SymbolicExpr();
+	return *temp;
 }
 
 value_t SymbolicExpr::Apply(ops::binary_op_t bin_op, value_t v1, value_t v2) {
 	switch(bin_op) {
+	case ops::ADD: return v1+v2;
+	case ops::SUBTRACT: return v1-v2;
+	case ops::MULTIPLY: return v1*v2;
 	case ops::SHIFT_L: return v1<<v2;
 	case ops::SHIFT_R: return v1>>v2;
 	case ops::BITWISE_AND: return v1&v2;
 	case ops::BITWISE_OR: return v1|v2;
 	case ops::BITWISE_XOR: return v1^v2;
+	case ops::CONCAT: return v1+v2;
+	case ops::EXTRACT: return v2;
 	default: {
-		fprintf(stderr,"Unknown unary operator %d\n", bin_op);
+		fprintf(stderr,"Unknown binary operator %d\n", bin_op);
+		exit(1);
+	}
+	}
+}
+
+bool SymbolicExpr::Apply(ops::compare_op_t comp_op, value_t v1, value_t v2) {
+	switch(comp_op) {
+	case ops::EQ: return v1==v2;
+	case ops::NEQ: return v1!=v2;
+	case ops::GT: return v1>v2;
+	case ops::GE: return v1>=v2;
+	case ops::LT: return v1<v2;
+	case ops::LE: return v1<=v2;
+	default: {
+		fprintf(stderr,"Unknown comparison operator %d\n", comp_op);
 		exit(1);
 	}
 	}
@@ -251,4 +92,24 @@ value_t SymbolicExpr::Apply(ops::unary_op_t un_op, value_t v) {
 	}
 	}
 }
+
+
+
+SymbolicExpr* SymbolicExpr::NewConcreteExpr(size_t s, value_t val) {
+	return new SymbolicExpr(val, s);
+}
+
+SymbolicExpr* SymbolicExpr::NewConstDeref(const SymbolicObject& obj, addr_t addr, size_t s, value_t val) {
+	DerefExpr *deref_expr = new DerefExpr(new SymbolicExpr(addr, SIZEOF_ULONG__), new SymbolicObject(obj), s, val);
+	return deref_expr;
+}
+
+SymbolicExpr* SymbolicExpr::Concatenate(SymbolicExpr *e1, SymbolicExpr *e2) {
+	return &e1->applyBinary(*e2, ops::CONCAT);
+}
+
+SymbolicExpr* SymbolicExpr::ExtractByte(const SymbolicExpr& e, size_t i) {
+	return new BinaryExpr(ops::EXTRACT, new SymbolicExpr(e), new SymbolicExpr(i, SIZEOF_ULONG__), SIZEOF_ULONG__,0);
+}
+
 }  // namespace crest

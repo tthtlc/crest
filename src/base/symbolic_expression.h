@@ -8,6 +8,10 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See LICENSE
 // for details.
 
+/***
+ * Authors: Jacob Burnim (jburnim@cs.berkeley.edu)
+ * 			Sudeep Juvekar (Sjuvekar@eecs.berkeley.edu)
+ */
 #ifndef BASE_SYMBOLIC_EXPRESSION_H__
 #define BASE_SYMBOLIC_EXPRESSION_H__
 
@@ -17,9 +21,9 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <yices_c.h>
 
 #include "base/basic_types.h"
-#include "base/linear_expression.h"
 
 using std::istream;
 using std::map;
@@ -41,79 +45,51 @@ using namespace node;
 class SymbolicExpr {
  public:
   // Constructs a symbolic expression for the constant 0.
-  SymbolicExpr();
+  SymbolicExpr() : value_(LONG_LONG_MIN), size_in_bytes_(sizeof(int)) {;}
 
   // Constructs a symbolic expression for the given constant 'c'.
-  explicit SymbolicExpr(value_t c);
+  SymbolicExpr(value_t c) : value_(c) {;}
 
-  // Constructs a symbolic expression for the singleton 'c' * 'v'.
-  SymbolicExpr(value_t c, var_t v);
+  //Constructor taking a value and type
+  SymbolicExpr(value_t v, size_t s) : value_(v), size_in_bytes_(s) {;}
 
-  // Copy constructor.
-  SymbolicExpr(const SymbolicExpr& e);
+   // Desctructor.
+  virtual ~SymbolicExpr() {;}
 
-  //Construct a symbolic expression from left, right, and types
-  SymbolicExpr(SymbolicExpr *l, SymbolicExpr *r, op_type op,
-		  node_type no, ops::binary_op_t binop, ops::unary_op_t unop, LinearExpr *exp,
-		  value_t v);
-  // Desctructor.
-  ~SymbolicExpr();
+  virtual size_t Size() { return 0;}
+  virtual void AppendVars(set<var_t>* vars) const {;}
+  virtual bool DependsOn(const map<var_t,type_t>& vars) const { return false;}
+  virtual void AppendToString(string* s) const {;}
+  virtual bool IsConcrete() const { return false;}
 
-  // Factory methods for constructing symbolic expressions.
-  static SymbolicExpr* NewConcreteExpr(type_t ty, value_t val) { return NULL; }
-  static SymbolicExpr* NewConstDeref(const SymbolicObject& obj, addr_t addr, type_t ty, value_t val) { return NULL; }
-  static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2) { return NULL; }
-  static SymbolicExpr* ExtractByte(const SymbolicExpr& e, size_t i) { return NULL; }
-
-  void Negate();
-  bool IsConcrete() const { return ( node_type_ == LINEAR && expr_->IsConcrete() ); }
-  size_t Size();
-  void AppendVars(set<var_t>* vars) const;
-  bool DependsOn(const map<var_t,type_t>& vars) const;
-
-  void AppendToString(string* s) const;
-
-  void Serialize(string* s) const;
-  bool Parse(istream& s);
+  virtual void Serialize(string* s) const {;}
+  virtual bool Parse(istream& s) { return true;}
 
   // Arithmetic operators.
-  const SymbolicExpr& operator+=(SymbolicExpr& e);
-  const SymbolicExpr& operator-=(SymbolicExpr& e);
-  const SymbolicExpr& operator+=(value_t c);
-  const SymbolicExpr& operator-=(value_t c);
-  const SymbolicExpr& operator*=(value_t c);
-  bool operator==(const SymbolicExpr& e) const;
-  SymbolicExpr& applyUnary(ops::unary_op_t op); //The operator is other than Negate
-  SymbolicExpr& applyBinary(SymbolicExpr &e, ops::binary_op_t op); //The operator is other than +,-and constant multiply
+
+  SymbolicExpr& applyUnary(ops::unary_op_t op);
+  SymbolicExpr& applyBinary(SymbolicExpr &e, ops::binary_op_t op);
   SymbolicExpr& applyDeref(); // Pointer deref
+  SymbolicExpr& applyCompare(SymbolicExpr &e, ops::compare_op_t op);
+  virtual void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl) {;}
+  virtual bool operator==(SymbolicExpr &e) {return false; }
+
+  static inline value_t Apply(ops::binary_op_t bin_op, value_t v1, value_t v2);
+  static inline bool Apply(ops::compare_op_t bin_op, value_t v1, value_t v2);
+  static inline value_t Apply(ops::unary_op_t un_op, value_t v);
+
+  // Factory methods for constructing symbolic expressions.
+    static SymbolicExpr* NewConcreteExpr(size_t s, value_t val);
+    static SymbolicExpr* NewConstDeref(const SymbolicObject &obj, addr_t addr, size_t ty, value_t val);
+    static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
+    static SymbolicExpr* ExtractByte(const SymbolicExpr& e, size_t i);
 
   // Accessors.
-  value_t const_term();
-  const map<var_t,value_t>& terms();
-  typedef map<var_t,value_t>::const_iterator TermIt;
-  LinearExpr *linear_expr() {return expr_; }
-  node_type get_node_type() {return node_type_;}
-  op_type get_op_type() { return op_type_; }
-  ops::binary_op_t get_binary_op() { return binary_op_; };
-  ops::unary_op_t get_unary_op() { return unary_op_; }
-  SymbolicExpr *getLeft() { return left_;}
-  SymbolicExpr *getRight() { return right_;}
-  value_t getValue() { return value_; }
-  types::type_t getType() { return type_; }
+  value_t get_value() { return value_; }
 
- private:
-	 LinearExpr *expr_;
-	 SymbolicExpr *left_, *right_;
-	 op_type op_type_;
-	 node_type node_type_;
-	 ops::binary_op_t binary_op_;
-	 ops::unary_op_t unary_op_;
-	 types::type_t type_;
+ protected:
 	 value_t value_;
-	 vector<SymbolicExpr> symbolic_writes_;
-
-	 static value_t Apply(ops::binary_op_t bin_op, value_t v1, value_t v2);
-	 static value_t Apply(ops::unary_op_t un_op, value_t v);
+	 size_t size_in_bytes_;
 };
 
 }  // namespace crest

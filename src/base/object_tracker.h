@@ -30,4 +30,4 @@ class ObjectTracker {
 
 }  // namespace crest
 
-#endif BASE_OBJECT_TRACKER_H__
+#endif //BASE_OBJECT_TRACKER_H__

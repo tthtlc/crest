@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "base/symbolic_object.h"
-
 #include "base/basic_types.h"
 #include "base/symbolic_memory.h"
 
