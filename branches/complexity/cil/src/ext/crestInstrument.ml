@@ -191,6 +191,11 @@ let isSymbolicType ty =
    | TInt _ | TPtr _ | TEnum _ -> true
    | _ -> false
 
+let isSignedType ty =
+  match (unrollType ty) with
+    | TInt (kind, _) -> isSigned kind
+    | _ -> false
+
 (* These definitions must match those in "libcrest/crest.h". *)
 let idType   = intType
 let bidType  = intType
@@ -324,27 +329,35 @@ class crestInstrumentVisitor f =
   (*
    * Functions to create calls to the above instrumentation functions.
    *)
-  let unaryOpCode op =
+  let unaryOp op =
     let c =
       match op with
-        | Neg -> 19  | BNot -> 20  |  LNot -> 21
+        | Neg -> 24  | BNot -> 25  |  LNot -> 26
     in
       integer c
   in
 
-  let castOp = integer 22 in
+  let castOp = integer 27 in
 
-  let binaryOpCode op =
+  let binaryOp (signed, op) =
     let c =
-      match op with
-        | PlusA   ->  0  | MinusA  ->  1  | Mult  ->  2  | Div   ->  3
-        | Mod     ->  4  | BAnd    ->  5  | BOr   ->  6  | BXor  ->  7
-        | Shiftlt ->  8  | Shiftrt ->  9  | LAnd  -> 10  | LOr   -> 11
-        | Eq      -> 12  | Ne      -> 13  | Gt    -> 14  | Le    -> 15
-        | Lt      -> 16  | Ge      -> 17
-            (* Other/unhandled operators discarded and treated concretely. *)
-            (* Have to handle "pointer - pointer" and "pointer +/- int". *)
-        | _ -> 18
+      match (signed, op) with
+        (* arithmetic ops *)
+        | _, PlusA       ->  0  | _, PlusPI      ->  0  | _, IndexPI    ->  0
+        | _, MinusA      ->  1  | _, Mult        ->  2
+        | false, Div     ->  3  | true, Div      ->  4
+        | false, Mod     ->  5  | true, Mod      ->  6
+        (* bitwise ops *)
+        | _, Shiftlt     ->  7  | false, Shiftrt ->  8  | true, Shiftrt ->  9
+        | _, BAnd        -> 10  | _, BOr         -> 11  | _, BXor       -> 12
+        (* comparison ops *)
+        | _, Eq          -> 13  | _, Ne          -> 14
+        | false, Gt      -> 15  | true, Gt       -> 16
+        | false, Le      -> 17  | true, Le       -> 18
+        | false, Lt      -> 19  | true, Lt       -> 20
+        | false, Ge      -> 21  | true, Ge       -> 22
+        (* all that's left are logical ops, which we should never encounter *)
+        | _ -> invalid_arg "binaryOp"
     in
       integer c
   in
@@ -401,9 +414,9 @@ class crestInstrumentVisitor f =
   let mkWrite addr        = mkInstCall writeFunc [toAddr addr] in
   let mkClearStack ()     = mkInstCall clearStackFunc [] in
   let mkCast ty v         = mkInstCall apply1Func [castOp; toType ty; toValue v] in
-  let mkApply1 op ty v    = mkInstCall apply1Func [unaryOpCode op; toType ty; toValue v] in
-  let mkApply2 op ty v    = mkInstCall apply2Func [binaryOpCode op; toType ty; toValue v] in
-  let mkPtrApply2 op sz v = mkInstCall ptrApply2Func [binaryOpCode op; sz; toValue v] in
+  let mkApply1 op ty v    = mkInstCall apply1Func [unaryOp op; toType ty; toValue v] in
+  let mkApply2 op ty v    = mkInstCall apply2Func [binaryOp op; toType ty; toValue v] in
+  let mkPtrApply2 op sz v = mkInstCall ptrApply2Func [binaryOp (false, op); sz; toValue v] in
   let mkBranch bid b      = mkInstCall branchFunc [integer bid; integer b] in
   let mkCall fid          = mkInstCall callFunc [integer fid] in
   let mkReturn ()         = mkInstCall returnFunc [] in
@@ -454,11 +467,7 @@ class crestInstrumentVisitor f =
             (instrumentLvalueAddr lv')
             @ (instrumentExpr e)
             @ [mkPtrApply2 IndexPI (sizeOf (typeOfLval lv)) (addressOf lv)]
-(*
-            @ [mkLoad noAddr addrType (sizeOf (typeOf lv')) ;
-               mkApply2 Mult addrType zero ;
-               mkApply2 PlusA addrType (addressOf lv)]
- *)
+
         | Field (f, _) ->
             let fieldOff = cExp "&%l:lv1 - &%l:lv2" [("lv1", Fl lv); ("lv2", Fl lv')] in
               (instrumentLvalueAddr lv')
@@ -493,20 +502,12 @@ class crestInstrumentVisitor f =
               (instrumentExpr e1) @ (instrumentExpr e2)
               @ [mkPtrApply2 op (sizeOf baseTy) e]
 
-(*
-        | BinOp (MinusPP, e1, e2, _) ->
-            let TPtr (baseTy, _) = unrollType (typeOf e1) in
-            let diff = cExp "(%e:e1-%e:e2)*sizeof(%t:t)"
-                            [("e1", e1), ("e2", e2), ("t", baseTy)] in
-              (instrumentExpr e1) @ (instrumentExpr e2)
-              @ [mkApply2 MinusA addrType diff ;
-                 mkLoad noAddr addrType sizeOf(baseTy) ;
-                 mkApply2 Div addrType e]
- *)
-
         | BinOp (op, e1, e2, _) ->
             (* Should skip this if we don't currently handle 'op'? *)
-            (instrumentExpr e1) @ (instrumentExpr e2) @ [mkApply2 op ty e]
+            let signed = isSignedType (typeOf e1) in
+              (instrumentExpr e1)
+              @ (instrumentExpr e2)
+              @ [mkApply2 (signed, op) ty e]
 
         | CastE (_, e') ->
             (instrumentExpr e') @ [mkCast ty e]
