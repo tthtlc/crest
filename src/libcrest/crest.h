@@ -108,7 +108,7 @@
  *
  * - When loading and storing structs, arrays, unions, or other
  *   aggregates (the only operations that can be performed on
- *   aggregates), the type is __CREST_AGGREGATE and the value is the
+ *   aggregates), the type is __CREST_STRUCT and the value is the
  *   size of the aggregate in bytes.
  *
  */
@@ -139,40 +139,42 @@
 
 /*
  * Constants representing possible C operators.
- *
- * TODO(jburnim): Arithmetic versus bitwise right shift?
  */
 enum {
   /* binary arithmetic */
-  __CREST_ADD       =  0,
-  __CREST_SUBTRACT  =  1,
-  __CREST_MULTIPLY  =  2,
-  __CREST_DIVIDE    =  3,
-  __CREST_MOD       =  4,
+  __CREST_ADD        =  0,
+  __CREST_SUBTRACT   =  1,
+  __CREST_MULTIPLY   =  2,
+  __CREST_DIVIDE     =  3,
+  __CREST_S_DIVIDE   =  4,
+  __CREST_MOD        =  5,
+  __CREST_S_MOD      =  6,
   /* binary bitwise operators */
-  __CREST_AND       =  5,
-  __CREST_OR        =  6,
-  __CREST_XOR       =  7,
-  __CREST_SHIFT_L   =  8,
-  __CREST_SHIFT_R   =  9,
-  /* binary logical operators */
-  __CREST_L_AND     = 10,
-  __CREST_L_OR      = 11,
+  __CREST_SHIFT_L    =  7,
+  __CREST_SHIFT_R    =  8,
+  __CREST_S_SHIFT_R  =  9,
+  __CREST_AND        = 10,
+  __CREST_OR         = 11,
+  __CREST_XOR        = 12,
   /* binary comparison */
-  __CREST_EQ        = 12,
-  __CREST_NEQ       = 13,
-  __CREST_GT        = 14,
-  __CREST_LEQ       = 15,
-  __CREST_LT        = 16,
-  __CREST_GEQ       = 17,
+  __CREST_EQ         = 13,
+  __CREST_NEQ        = 14,
+  __CREST_GT         = 15,
+  __CREST_S_GT       = 16,
+  __CREST_LEQ        = 17,
+  __CREST_S_LEQ      = 18,
+  __CREST_LT         = 19,
+  __CREST_S_LT       = 20,
+  __CREST_GEQ        = 21,
+  __CREST_S_GEQ      = 22,
   /* unhandled binary operators */
-  __CREST_CONCRETE  = 18,
+  __CREST_CONCRETE   = 23,
   /* unary operators */
-  __CREST_NEGATE    = 19,
-  __CREST_NOT       = 20,
-  __CREST_L_NOT     = 21,
+  __CREST_NEGATE     = 24,
+  __CREST_NOT        = 25,
+  __CREST_L_NOT      = 26,
   /* cast */
-  __CREST_CAST      = 22,
+  __CREST_CAST       = 27,
 };
 
 enum {
@@ -181,7 +183,7 @@ enum {
   __CREST_U_INT = 4,        __CREST_INT = 5,
   __CREST_U_LONG = 6,       __CREST_LONG = 7,
   __CREST_U_LONG_LONG = 8,  __CREST_LONG_LONG = 9,
-  __CREST_AGGREGATE = 10,
+  __CREST_STRUCT = 10,
 };
 
 /*

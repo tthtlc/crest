@@ -40,9 +40,19 @@ static const branch_id_t kReturnId = -2;
 // Operator enums and utility function.
 
 namespace ops {
-enum compare_op_t { EQ = 0, NEQ = 1, GT = 2, LE = 3, LT = 4, GE = 5 };
-enum binary_op_t { ADD, SUBTRACT, MULTIPLY, CONCRETE, SHIFT_L, SHIFT_R, BITWISE_AND, BITWISE_OR, BITWISE_XOR, CONCAT, EXTRACT };
-enum unary_op_t { NEGATE, LOGICAL_NOT, BITWISE_NOT };
+enum compare_op_t { EQ   = 0,  NEQ  = 1,
+                    GT   = 2,  LE   = 3,  LT   = 4,  GE = 5,
+                    S_GT = 6,  S_LE = 7,  S_LT = 8,  S_GE = 9 };
+
+enum binary_op_t { ADD,          SUBTRACT,    MULTIPLY,
+                   DIV,          S_DIV,
+                   MOD,          S_MOD,
+                   SHIFT_L,      SHIFT_R,     S_SHIFT_R,
+                   BITWISE_AND,  BITWISE_OR,  BITWISE_XOR,
+                   CONCAT,       EXTRACT,     CONCRETE };
+
+enum unary_op_t { NEGATE, LOGICAL_NOT, BITWISE_NOT, CAST };
+
 }  // namespace ops
 
 using ops::compare_op_t;

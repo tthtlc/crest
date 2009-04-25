@@ -31,17 +31,19 @@ static int pre_symbolic;
 // those defined in base/basic_types.h.
 static const int kOpTable[] =
   { // binary arithmetic
-    ops::ADD, ops::SUBTRACT, ops::MULTIPLY, ops::CONCRETE, ops::CONCRETE,
+    ops::ADD, ops::SUBTRACT, ops::MULTIPLY,
+    ops::DIV, ops::S_DIV, ops::MOD, ops::S_MOD,
     // binary bitwise operators
-    ops::CONCRETE, ops::CONCRETE, ops::CONCRETE, ops::CONCRETE, ops::CONCRETE,
-    // binary logical operators
-    ops::CONCRETE, ops::CONCRETE,
+    ops::SHIFT_L, ops::SHIFT_R, ops::S_SHIFT_R,
+    ops::BITWISE_AND, ops::BITWISE_OR, ops::BITWISE_XOR,
     // binary comparison
-    ops::EQ, ops::NEQ, ops::GT, ops::LE, ops::LT, ops::GE,
-    // unhandled binary operators
+    ops::EQ, ops::NEQ,
+    ops::GT, ops::S_GT, ops::LE, ops::S_LE,
+    ops::LT, ops::S_LT, ops::GE, ops::S_GE,
+    // unhandled binary operators (note: there aren't any)
     ops::CONCRETE,
     // unary operators
-    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT
+    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::CAST
   };
 
 
@@ -225,23 +227,26 @@ void __CrestApply2(__CREST_ID id, __CREST_OP op,
   if (pre_symbolic)
     return;
 
-  if ((op >= __CREST_ADD) && (op <= __CREST_L_OR)) {
-    SI->ApplyBinaryOp(id,
-                      static_cast<binary_op_t>(kOpTable[op]),
-                      static_cast<type_t>(ty),
-                      val);
-  } else {
+  if ((op >= __CREST_EQ) && (op <= __CREST_S_GEQ)) {
     SI->ApplyCompareOp(id,
                        static_cast<compare_op_t>(kOpTable[op]),
                        static_cast<type_t>(ty),
                        val);
+  } else {
+    SI->ApplyBinaryOp(id,
+                      static_cast<binary_op_t>(kOpTable[op]),
+                      static_cast<type_t>(ty),
+                      val);
   }
 }
 
 
 void __CrestPtrApply2(__CREST_ID id, __CREST_OP op,
                       size_t size, __CREST_VALUE val) {
-  // TODO:
+  if (pre_symbolic)
+    return;
+
+  SI->ApplyBinPtrOp(id, static_cast<binary_op_t>(kOpTable[op]), size, val);
 }
 
 void __CrestBranch(__CREST_ID id, __CREST_BRANCH_ID bid, __CREST_BOOL b) {

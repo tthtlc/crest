@@ -219,6 +219,11 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
 }
 
 
+void SymbolicInterpreter::ApplyBinPtrOp(id_t id, binary_op_t op,
+                                        size_t size, value_t value) {
+  // TODO: Implement this.
+}
+
 void SymbolicInterpreter::ApplyCompareOp(id_t id, compare_op_t op,
                                          type_t ty, value_t value) {
   IFDEBUG(fprintf(stderr, "compare2 %d %lld\n", op, value));
