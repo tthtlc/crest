@@ -11,8 +11,8 @@
 /***
  * Author: Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
  */
-#ifndef BASIC_TYPE_H_
-#define BASIC_TYPE_H_
+#ifndef BASIC_TYPE_H__
+#define BASIC_TYPE_H__
 
 #include <istream>
 #include <map>
@@ -35,28 +35,26 @@ using std::vector;
 
 namespace crest {
 
-/***
- * Basic Expression
- */
-class BasicExpr : public SymbolicExpr { // Basic variable or a constant
-private:
-	 var_t variable_;
-	 char yices_type_[32];
+class BasicExpr : public SymbolicExpr {
+ public:
+  BasicExpr(var_t v);
+  BasicExpr(size_t s, value_t val, var_t var);
+  size_t Size();
+  void AppendVars(set<var_t>* vars);
+  bool DependsOn(const map<var_t,type_t>& vars);
+  void AppendToString(string* s);
+  bool IsConcrete();
+  bool operator==(BasicExpr &e);
+  void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
 
-public:
-	 BasicExpr(var_t v);
-	 BasicExpr(size_t s, value_t val, var_t var);
-	 size_t Size();
-	 void AppendVars(set<var_t>* vars);
-	 bool DependsOn(const map<var_t,type_t>& vars);
-	 void AppendToString(string* s);
-	 bool IsConcrete();
-	 bool operator==(BasicExpr &e);
-	 void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
+  // Accessors
+  var_t get_variable() { return variable_; }
 
-	//Accessor
-	 var_t get_variable() { return variable_; }
+ private:
+  var_t variable_;
+  char yices_type_[32];
 };
-}
 
-#endif /* BASIC_TYPE_H_ */
+}  // namespace crest
+
+#endif  // BASIC_TYPE_H__

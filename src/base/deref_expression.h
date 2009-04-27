@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Jacob Burnim (jburnim@cs.berkeley.edu)
+// Copyright (c) 2009, Jacob Burnim (jburnim@cs.berkeley.edu)
 //
 // This file is part of CREST, which is distributed under the revised
 // BSD license.  A copy of this license can be found in the file LICENSE.
@@ -12,8 +12,8 @@
  * Author: Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
  */
 
-#ifndef DEREF_EXPRESSION_H_
-#define DEREF_EXPRESSION_H_
+#ifndef DEREF_EXPRESSION_H__
+#define DEREF_EXPRESSION_H__
 
 #include <istream>
 #include <map>
@@ -36,27 +36,29 @@ using std::string;
 using std::vector;
 
 namespace crest {
-/***
- * Dereference Expression
- */
 
 class DerefExpr : public SymbolicExpr {
-private:
-	 const SymbolicObject *object_; // The symbolic object corresponding to the dereference
-	 SymbolicExpr *symbolic_addr_; //A symbolic expression representing the symbolic address of this deref
-	 unsigned char* concrete_bytes_;
+ public:
+  DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t , value_t v);
+  ~DerefExpr();
+  size_t Size();
+  void AppendVars(set<var_t>* vars);
+  bool DependsOn(const map<var_t,type_t>& vars);
+  void AppendToString(string *s);
+  bool IsConcrete();
+  bool operator==(DerefExpr &e);
+  void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
 
-public:
-	 DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t , value_t v);
-	 ~DerefExpr();
-	 size_t Size();
-	 void AppendVars(set<var_t>* vars);
-	 bool DependsOn(const map<var_t,type_t>& vars);
-	 void AppendToString(string *s);
-	 bool IsConcrete();
-	 bool operator==(DerefExpr &e);
-	 void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
+ private:
+  // The symbolic object corresponding to the dereference.
+  const SymbolicObject *object_;
+
+  // A symbolic expression representing the symbolic address of this deref.
+  SymbolicExpr *symbolic_addr_;
+
+  unsigned char* concrete_bytes_;
 };
 
-}
-#endif /* DEREF_EXPRESSION_H_ */
+}  // namespace crest
+
+#endif  // DEREF_EXPRESSION_H__

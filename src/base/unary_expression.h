@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Jacob Burnim (jburnim@cs.berkeley.edu)
+// Copyright (c) 2009, Jacob Burnim (jburnim@cs.berkeley.edu)
 //
 // This file is part of CREST, which is distributed under the revised
 // BSD license.  A copy of this license can be found in the file LICENSE.
@@ -11,8 +11,8 @@
 /***
  * Author: Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
  */
-#ifndef UNARY_EXPRESSION_H_
-#define UNARY_EXPRESSION_H_
+#ifndef UNARY_EXPRESSION_H__
+#define UNARY_EXPRESSION_H__
 
 #include <istream>
 #include <map>
@@ -34,29 +34,27 @@ using std::string;
 using std::vector;
 
 namespace crest {
-/***
- * Unary Expression
- */
- class UnaryExpr : public SymbolicExpr {
+
+class UnaryExpr : public SymbolicExpr {
+ public:
+  UnaryExpr(ops::unary_op_t op, SymbolicExpr *c, size_t s, value_t v);
+  ~UnaryExpr();
+  size_t Size();
+  void AppendVars(set<var_t>* vars);
+  bool DependsOn(const map<var_t,type_t>& vars);
+  void AppendToString(string *s);
+  bool IsConcrete();
+  void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
+
+  // Accessors
+  ops::unary_op_t get_unary_op() { return unary_op_; }
+  SymbolicExpr* get_child() { return child_; }
 
  private:
-	 ops::unary_op_t unary_op_;
-	 SymbolicExpr *child_;
+  ops::unary_op_t unary_op_;
+  SymbolicExpr *child_;
+};
 
- public:
-	 UnaryExpr(ops::unary_op_t op, SymbolicExpr *c, size_t s, value_t v);
-	 ~UnaryExpr();
-	 size_t Size();
-	 void AppendVars(set<var_t>* vars);
-	 bool DependsOn(const map<var_t,type_t>& vars);
-	 void AppendToString(string *s);
-	 bool IsConcrete();
-	 void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
+}  // namespace crest
 
-	//Accessor
-	 ops::unary_op_t get_unary_op() { return unary_op_; }
-	 SymbolicExpr* get_child() { return child_; }
- };
-
-}
-#endif /* UNARY_EXPRESSION_H_ */
+#endif  // UNARY_EXPRESSION_H__

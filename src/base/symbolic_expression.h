@@ -36,12 +36,6 @@ namespace crest {
 
 class SymbolicObject;
 
-namespace node {
-	enum op_type {UNARY, BINARY, DEREF};
-	enum node_type {LINEAR, NONLINEAR};
-}
-using namespace node;
-
 class SymbolicExpr {
  public:
   // Constructs a symbolic expression for the constant 0.
@@ -79,17 +73,17 @@ class SymbolicExpr {
   static inline value_t Apply(ops::unary_op_t un_op, value_t v);
 
   // Factory methods for constructing symbolic expressions.
-    static SymbolicExpr* NewConcreteExpr(size_t s, value_t val);
-    static SymbolicExpr* NewConstDeref(const SymbolicObject &obj, addr_t addr, size_t ty, value_t val);
-    static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
-    static SymbolicExpr* ExtractByte(const SymbolicExpr& e, size_t i);
+  static SymbolicExpr* NewConcreteExpr(size_t s, value_t val);
+  static SymbolicExpr* NewConstDeref(const SymbolicObject &obj, addr_t addr, size_t ty, value_t val);
+  static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
+  static SymbolicExpr* ExtractByte(const SymbolicExpr& e, size_t i);
 
   // Accessors.
   value_t get_value() { return value_; }
 
  protected:
-	 value_t value_;
-	 size_t size_in_bytes_;
+  value_t value_;
+  size_t size_in_bytes_;
 };
 
 }  // namespace crest
