@@ -306,29 +306,22 @@ void SymbolicInterpreter::Branch(id_t id, branch_id_t bid, bool pred_value) {
 
 value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
   assert(ty != types::STRUCT);
+  ex_.mutable_vars()->insert(make_pair(num_inputs_, ty));
 
-  // Construct new symbolic expr and concrete value of type 'ty'.
-  BasicExpr* e = NULL;
-  value_t ret = 0;
-
-  // Somehow combine bytes num_inputs_, ..., num_inputs+kSizeOfType[ty]-1,
-  // into a symbolic expression.
-  for (size_t i = 0; i < kSizeOfType[ty]; i++) {
-    ex_.mutable_vars()->insert(make_pair(num_inputs_ + i, ty));
-
-    value_t val = 0;
-    if (num_inputs_ + i < ex_.inputs().size()) {
-      val = ex_.inputs()[num_inputs_ + i];
-    } else {
-      // New inputs are initially zero.  (Could randomize instead.)
-      ex_.mutable_inputs()->push_back(0);
-    }
-
-    ret = ret << 8 + val;
+  // Size and initial, concrete value.
+  size_t size = kSizeOfType[ty];
+  value_t val = 0;
+  if (num_inputs_ < ex_.inputs().size()) {
+    val = ex_.inputs()[num_inputs_];
+  } else {
+    // New inputs are initially zero.  (Could randomize instead.)
+    ex_.mutable_inputs()->push_back(0);
   }
 
-  mem_.write(addr, ty, e);
-  return ret;
+  mem_.write(addr, ty, new BasicExpr(size, val, num_inputs_));
+
+  num_inputs_++;
+  return val;
 }
 
 
