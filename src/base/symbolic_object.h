@@ -14,8 +14,8 @@
 #include <utility>
 #include <vector>
 
-#include "base/symbolic_object.h"
 #include "base/basic_types.h"
+#include "base/symbolic_expression.h"
 #include "base/symbolic_memory.h"
 
 namespace crest {

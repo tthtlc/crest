@@ -23,7 +23,7 @@ namespace crest {
 class DerefExpr : public SymbolicExpr {
  public:
   DerefExpr(SymbolicExpr* addr, SymbolicObject* o, size_t size, value_t val);
-  DerefExpr::DerefExpr(const DerefExpr& de);
+  DerefExpr(const DerefExpr& de);
   ~DerefExpr();
 
   DerefExpr* Clone() const;

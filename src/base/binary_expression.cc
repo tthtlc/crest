@@ -53,6 +53,7 @@ void BinaryExpr::AppendToString(string *s) const {
 yices_expr BinaryExpr::bit_blast(yices_context ctx) const {
   yices_expr e1 = left_->bit_blast(ctx);
   yices_expr e2 = right_->bit_blast(ctx);
+  unsigned end = 0, start = 0;
 
   switch (binary_op_) {
   case ops::ADD:
@@ -84,8 +85,8 @@ yices_expr BinaryExpr::bit_blast(yices_context ctx) const {
     return yices_mk_bv_concat(ctx, e1, e2);
   case ops::EXTRACT:
     // Assumption: right_ is concrete.
-    unsigned end = 8*(size() - right_->value()) - 1;
-    unsigned start = end - 7;
+    end = 8*(size() - right_->value()) - 1;
+    start = end - 7;
     return yices_mk_bv_extract(ctx, end, start, e1);
   default:
     fprintf(stderr, "Unknown/unhandled binary operator: %d\n", binary_op_);
