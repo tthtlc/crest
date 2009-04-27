@@ -12,45 +12,55 @@
  * Author: Sudeep juvekar (sjuvekar@eecs.berkeley.edu)
  * 4/17/09
  */
-#include <assert.h>
-#include <yices_c.h>
-#include "base/deref_expression.h"
 
-using namespace __gnu_cxx;
+#include <assert.h>
+#include <stdlib.h>
+#include <yices_c.h>
+
+#include "base/deref_expression.h"
+#include "base/symbolic_object.h"
 
 namespace crest {
 
-DerefExpr::DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t s, value_t v) :
-  SymbolicExpr(v,s), object_(o), symbolic_addr_(c) {
-  concrete_bytes_ = new unsigned char[o->size()];
+DerefExpr::DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t s, value_t v)
+  : SymbolicExpr(s,v), object_(o), addr_(c),
+    concrete_bytes_(new unsigned char[o->size()])
+{
+  // Copy bytes from the program.
+  memcpy((void*)concrete_bytes_, (void*)addr_, o->size());
 }
 
-DerefExpr::~DerefExpr() { }
-
-size_t DerefExpr::DerefExpr::Size() {
-  return 0;
+DerefExpr::DerefExpr(const DerefExpr& de)
+  : SymbolicExpr(de.size(), de.value()),
+    object_(new SymbolicObject(*de.object_)), addr_(de.addr_->Clone()),
+    concrete_bytes_(new unsigned char[de.object_->size()])
+{
+  // Copy bytes from other DerefExpr.
+  memcpy((void*)concrete_bytes_, de.concrete_bytes_, object_->size());
 }
 
-void DerefExpr::AppendVars(set<var_t>* vars) { }
-
-bool DerefExpr::DependsOn(const map<var_t,type_t>& vars) {
-  return false;
+DerefExpr::~DerefExpr() {
+  delete concrete_bytes_;
 }
 
-void DerefExpr::AppendToString(string *s) {
-  s->append(" (*");
-  s->append(")");
+DerefExpr* DerefExpr::Clone() const {
+  return new DerefExpr(*this);
 }
 
-bool DerefExpr::IsConcrete() {
-  return false;
+void DerefExpr::AppendVars(set<var_t>* vars) const {
+  assert(false);
 }
 
-bool DerefExpr::operator==(DerefExpr &e) {
-  return false;
+bool DerefExpr::DependsOn(const map<var_t,type_t>& vars) const {
+  return true;
 }
 
-void DerefExpr::bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl) {
+void DerefExpr::AppendToString(string *s) const {
+  s->append(" (*?)");
+}
+
+yices_expr DerefExpr::bit_blast(yices_context ctx) const {
+  assert(false);
   // TODO
 }
 

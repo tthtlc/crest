@@ -112,28 +112,47 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
 
   // Variable declarations.
   map<var_t,yices_var_decl> x_decl;
+  for (VarIt i = vars.begin(); i != vars.end(); ++i) {
+    char name[24];
+    sprintf(name, "x%u", i->first);
 
+    size_t size = 8 * kSizeOfType[i->second];
+    yices_type ty = yices_mk_bitvector_type(ctx, size);
 
+    yices_var_decl decl = yices_mk_var_decl(ctx, name, ty);
+    assert(decl);
+    x_decl[i->first] = decl;
+  }
+
+  // Assertions.
   for (PredIt i = constraints.begin(); i != constraints.end(); ++i) {
-      SymbolicExpr& se = (SymbolicExpr&)(*i)->expr();
+    const SymbolicExpr& se = (*i)->expr();
 
-      yices_expr *e=NULL;
-      se.bit_blast(*e, ctx, x_decl);
+    // TODO: Have to decide whether we're using SymbolicPred's or
+    // CompareExpr's here and in the symbolic interpreter, symbolic path,
+    // symbolic execution, etc.
+    //
+    // (Currently, we compute CompareExpr's in 
 
-      yices_expr pred;
-      switch((*i)->op()) {
-      case ops::EQ:  pred = yices_mk_eq(ctx, *e, zero); break;
-      case ops::NEQ: pred = yices_mk_diseq(ctx, *e, zero); break;
-      case ops::GT:  pred = yices_mk_gt(ctx, *e, zero); break;
-      case ops::LE:  pred = yices_mk_le(ctx, *e, zero); break;
-      case ops::LT:  pred = yices_mk_lt(ctx, *e, zero); break;
-      case ops::GE:  pred = yices_mk_ge(ctx, *e, zero); break;
-      default:
-    	  fprintf(stderr, "Unknown comparison operator: %d\n", (*i)->op());
-    	  exit(1);
-      }
-      yices_assert(ctx, pred);
-      delete e;
+    yices_expr e = se.bit_blast(ctx);
+
+    yices_expr pred;
+    switch((*i)->op()) {
+    case ops::EQ:    pred = yices_mk_eq(ctx, e, zero); break;
+    case ops::NEQ:   pred = yices_mk_diseq(ctx, e, zero); break;
+    case ops::GT:    pred = yices_mk_gt(ctx, e, zero); break;
+    case ops::LE:    pred = yices_mk_le(ctx, e, zero); break;
+    case ops::LT:    pred = yices_mk_lt(ctx, e, zero); break;
+    case ops::GE:    pred = yices_mk_ge(ctx, e, zero); break;
+    case ops::S_GT:  pred = yices_mk_gt(ctx, e, zero); break;
+    case ops::S_LE:  pred = yices_mk_le(ctx, e, zero); break;
+    case ops::S_LT:  pred = yices_mk_lt(ctx, e, zero); break;
+    case ops::S_GE:  pred = yices_mk_ge(ctx, e, zero); break;
+    default:
+      fprintf(stderr, "Unknown comparison operator: %d\n", (*i)->op());
+      exit(1);
+    }
+    yices_assert(ctx, pred);
   }
 
   bool success = (yices_check(ctx) == l_true);

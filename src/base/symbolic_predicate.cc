@@ -13,7 +13,7 @@
 namespace crest {
 
 SymbolicPred::SymbolicPred()
-  : op_(ops::EQ), expr_(new SymbolicExpr(0)) { }
+  : op_(ops::EQ), expr_(SymbolicExpr::NewConcreteExpr(types::INT, 0)) { }
 
 SymbolicPred::SymbolicPred(compare_op_t op, SymbolicExpr* expr)
   : op_(op), expr_(expr) { }
@@ -46,7 +46,8 @@ bool SymbolicPred::Parse(istream& s) {
 }
 
 bool SymbolicPred::Equal(const SymbolicPred& p) const {
-  return ((op_ == p.op_) && (*expr_ == *p.expr_));
+  return false;
+  // return ((op_ == p.op_) && (*expr_ == *p.expr_));
 }
 
 

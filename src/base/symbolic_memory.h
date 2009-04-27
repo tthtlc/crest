@@ -22,6 +22,7 @@ class SymbolicExpr;
 class SymbolicMemory {
  public:
   SymbolicMemory();
+  SymbolicMemory(const SymbolicMemory& m);
   ~SymbolicMemory();
 
   // NOTE: Transfers ownership of the returned object to the caller.

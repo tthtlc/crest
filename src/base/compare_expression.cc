@@ -12,34 +12,34 @@
  * Author: Sudeep juvekar (sjuvekar@eecs.berkeley.edu)
  * 4/17/09
  */
-#include <assert.h>
 #include <yices_c.h>
 #include "base/compare_expression.h"
 
 namespace crest {
 
 CompareExpr::CompareExpr(ops::compare_op_t op, SymbolicExpr *l, SymbolicExpr *r, size_t s, value_t v)
-  : SymbolicExpr(v,s), compare_op_(op), left_(l), right_(r) { }
+  : SymbolicExpr(s, v), compare_op_(op), left_(l), right_(r) { }
 
 CompareExpr::~CompareExpr() {
   delete left_;
   delete right_;
 }
 
-size_t CompareExpr::Size() {
-  return left_->Size() + right_->Size() + 1;
+CompareExpr* CompareExpr::Clone() const {
+  return new CompareExpr(compare_op_, left_->Clone(), right_->Clone(),
+                         size(), value());
 }
 
-void CompareExpr::AppendVars(set<var_t>* vars) {
+void CompareExpr::AppendVars(set<var_t>* vars) const {
   left_->AppendVars(vars);
   right_->AppendVars(vars);
 }
 
-bool CompareExpr::DependsOn(const map<var_t,type_t>& vars) {
+bool CompareExpr::DependsOn(const map<var_t,type_t>& vars) const {
   return left_->DependsOn(vars) || right_->DependsOn(vars);
 }
 
-void CompareExpr::AppendToString(string *s) {
+void CompareExpr::AppendToString(string *s) const {
   char buff[32];
   sprintf(buff, " (%u", compare_op_);
   s->append(buff);
@@ -48,42 +48,35 @@ void CompareExpr::AppendToString(string *s) {
   s->append(")");
 }
 
-bool CompareExpr::IsConcrete() {
-  return false;
-}
-
-bool CompareExpr::operator==(CompareExpr &e) {
-  return *left_ == *e.left_ && *right_ == *e.right_;
-}
-
-
-void CompareExpr::bit_blast(yices_expr &e, yices_context &ctx, map<var_t,yices_var_decl> &x_decl) {
-  yices_expr *e1 = NULL, *e2 = NULL;
-  if (left_)
-    left_->bit_blast(*e1, ctx, x_decl);
-  if (right_)
-    right_->bit_blast(*e2, ctx, x_decl);
+yices_expr CompareExpr::bit_blast(yices_context ctx) const {
+  yices_expr e1 = left_->bit_blast(ctx);
+  yices_expr e2 = right_->bit_blast(ctx);
 
   switch (compare_op_) {
-  case ops::GE:
-    e = yices_mk_bv_ge(ctx, *e1, *e2);
-    break;
+  case ops::EQ:
+    return yices_mk_eq(ctx, e1, e2);
+  case ops::NEQ:
+    return yices_mk_diseq(ctx, e1, e2);
   case ops::GT:
-    e = yices_mk_bv_gt(ctx, *e1, *e2);
-    break;
+    return yices_mk_bv_gt(ctx, e1, e2);
   case ops::LE:
-    e = yices_mk_bv_le(ctx, *e1, *e2);
-    break;
+    return yices_mk_bv_le(ctx, e1, e2);
   case ops::LT:
-    e = yices_mk_bv_lt(ctx, *e1, *e2);
-    break;
+    return yices_mk_bv_lt(ctx, e1, e2);
+  case ops::GE:
+    return yices_mk_bv_ge(ctx, e1, e2);
+  case ops::S_GT:
+    return yices_mk_bv_sgt(ctx, e1, e2);
+  case ops::S_LE:
+    return yices_mk_bv_sle(ctx, e1, e2);
+  case ops::S_LT:
+    return yices_mk_bv_slt(ctx, e1, e2);
+  case ops::S_GE:
+    return yices_mk_bv_sge(ctx, e1, e2);
   default:
     fprintf(stderr, "Unknown comparison operator: %d\n", compare_op_);
     exit(1);
   }
-
-  delete e1;
-  delete e2;
 }
 
 }  // namespace crest
