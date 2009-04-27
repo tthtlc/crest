@@ -35,12 +35,12 @@ namespace crest {
 typedef map<addr_t,SymbolicExpr*>::const_iterator ConstMemIt;
 
 SymbolicInterpreter::SymbolicInterpreter()
-  : pred_(NULL), ex_(true), num_inputs_(0) {
+  : ex_(true), num_inputs_(0) {
   stack_.reserve(16);
 }
 
 SymbolicInterpreter::SymbolicInterpreter(const vector<value_t>& input)
-  : pred_(NULL), ex_(true) {
+  : ex_(true) {
   stack_.reserve(16);
   ex_.mutable_inputs()->assign(input.begin(), input.end());
 }
@@ -70,7 +70,6 @@ void SymbolicInterpreter::ClearStack(id_t id) {
     delete it->expr;
   }
   stack_.clear();
-  ClearPredicateRegister();
   return_value_ = false;
   IFDEBUG(DumpMemory());
 }
@@ -88,7 +87,6 @@ void SymbolicInterpreter::Load(id_t id, addr_t addr, type_t ty, value_t value) {
     PushSymbolic(obj->read(addr, ty, value), ty, value);
   }
 
-  ClearPredicateRegister();
   IFDEBUG(DumpMemory());
 }
 
@@ -126,7 +124,6 @@ void SymbolicInterpreter::Deref(id_t id, addr_t addr, type_t ty, value_t value) 
 
   PushSymbolic(e, ty, value);
 
-  ClearPredicateRegister();
   IFDEBUG(DumpMemory());
 }
 
@@ -153,7 +150,6 @@ void SymbolicInterpreter::Store(id_t id, addr_t addr) {
   }
 
   stack_.pop_back();
-  ClearPredicateRegister();
   IFDEBUG(DumpMemory());
 }
 
@@ -184,7 +180,6 @@ void SymbolicInterpreter::Write(id_t id, addr_t addr) {
   stack_.pop_back();
   stack_.pop_back();
 
-  ClearPredicateRegister();
   IFDEBUG(DumpMemory());
 }
 
@@ -196,8 +191,9 @@ void SymbolicInterpreter::ApplyUnaryOp(id_t id, unary_op_t op,
   StackElem& se = stack_.back();
 
   if (se.expr)
-	  *(se.expr) = (*se.expr).applyUnary(op);
+    se.expr = SymbolicExpr::NewUnaryExpr(ty, value, op, se.expr);
 
+  se.ty = ty;
   se.concrete = value;
   IFDEBUG(DumpMemory());
 }
@@ -210,11 +206,20 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
   StackElem& a = *(stack_.rbegin()+1);
   StackElem& b = stack_.back();
 
-  if(a.expr || b.expr)
-	  *a.expr = (*a.expr).applyBinary(*b.expr, op);
+  if (a.expr) {
+    if (b.expr == NULL) {
+      b.expr = SymbolicExpr::NewConcreteExpr(b.ty, b.concrete);
+    }
+    a.expr = SymbolicExpr::NewBinaryExpr(ty, value, op, a.expr, b.expr);
+  } else if (b.expr) {
+    a.expr = SymbolicExpr::NewConcreteExpr(a.ty, a.concrete);
+    a.expr = SymbolicExpr::NewBinaryExpr(ty, value, op, a.expr, b.expr);
+  }
+
   a.concrete = value;
+  a.ty = ty;
+
   stack_.pop_back();
-  ClearPredicateRegister();
   IFDEBUG(DumpMemory());
 }
 
@@ -231,17 +236,23 @@ void SymbolicInterpreter::ApplyCompareOp(id_t id, compare_op_t op,
   StackElem& a = *(stack_.rbegin()+1);
   StackElem& b = stack_.back();
 
-  if (a.expr || b.expr)
-	  *a.expr = (*a.expr).applyCompare(*b.expr, op);
+  if (a.expr) {
+    if (b.expr == NULL) {
+      b.expr = SymbolicExpr::NewConcreteExpr(b.ty, b.concrete);
+    }
+    a.expr = SymbolicExpr::NewCompareExpr(ty, value, op, a.expr, b.expr);
+  } else if (b.expr) {
+    a.expr = SymbolicExpr::NewConcreteExpr(a.ty, a.concrete);
+    a.expr = SymbolicExpr::NewCompareExpr(ty, value, op, a.expr, b.expr);
+  }
 
   a.concrete = value;
+  a.ty = ty;
+
   stack_.pop_back();
   IFDEBUG(DumpMemory());
 }
 
-  //void SymbolicInterpreter::ApplyDeref() {
-    //STUB
-  //}
 
 void SymbolicInterpreter::Call(id_t id, function_id_t fid) {
   ex_.mutable_path()->Push(kCallId);
@@ -278,14 +289,17 @@ void SymbolicInterpreter::HandleReturn(id_t id, type_t ty, value_t value) {
 void SymbolicInterpreter::Branch(id_t id, branch_id_t bid, bool pred_value) {
   IFDEBUG(fprintf(stderr, "branch %d %d\n", bid, pred_value));
   assert(stack_.size() == 1);
-  stack_.pop_back();
+  StackElem& se = stack_.back();
 
-  if (pred_ && !pred_value) {
-    pred_->Negate();
+  // If necessary, negate the expression.
+  if (se.expr && !pred_value) {
+    se.expr = SymbolicExpr::NewUnaryExpr(types::INT, !pred_value,
+                                         ops::LOGICAL_NOT, se.expr);
   }
 
-  ex_.mutable_path()->Push(bid, pred_);
-  pred_ = NULL;
+  ex_.mutable_path()->Push(bid, se.expr);
+
+  stack_.pop_back();
   IFDEBUG(DumpMemory());
 }
 
@@ -331,12 +345,6 @@ void SymbolicInterpreter::PushSymbolic(SymbolicExpr* expr,
   se.expr = expr;
   se.ty = ty;
   se.concrete = value;
-}
-
-
-void SymbolicInterpreter::ClearPredicateRegister() {
-  delete pred_;
-  pred_ = NULL;
 }
 
 

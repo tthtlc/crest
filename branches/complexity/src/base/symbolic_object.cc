@@ -20,8 +20,15 @@ namespace crest {
 SymbolicObject::SymbolicObject(addr_t start, size_t size)
   : start_(start), size_(size), writes_(4) { }
 
-SymbolicObject::SymbolicObject(const SymbolicObject &obj) :
-	start_(obj.start_), size_(obj.size_), mem_(obj.mem_), writes_(obj.writes_) {;}
+SymbolicObject::SymbolicObject(const SymbolicObject &obj)
+  : start_(obj.start_), size_(obj.size_),
+    mem_(obj.mem_), writes_(obj.writes_.size())
+{
+  for (vector<Write>::iterator it = writes_.begin(); it != writes_.end(); ++it) {
+    it->first = it->first->Clone();
+    it->second = it->second->Clone();
+  }
+}
 
 SymbolicObject::~SymbolicObject() {
   for (vector<Write>::iterator it = writes_.begin(); it != writes_.end(); ++it) {
@@ -36,7 +43,7 @@ SymbolicExpr* SymbolicObject::read(addr_t addr, type_t ty, value_t val) const {
     return mem_.read(addr, ty, val);
   } else {
     // There have been symbolic writes, so return a deref.
-    return SymbolicExpr::NewConstDeref(*this, addr, ty, val);
+    return SymbolicExpr::NewConstDeref(ty, val, *this, addr);
   }
 }
 
@@ -60,7 +67,5 @@ void SymbolicObject::write(SymbolicExpr* sym_addr, addr_t addr,
     writes_.push_back(make_pair(sym_addr, e));
   }
 }
-
-
 
 }  // namespace crest

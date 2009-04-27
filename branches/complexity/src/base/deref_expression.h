@@ -15,48 +15,35 @@
 #ifndef DEREF_EXPRESSION_H__
 #define DEREF_EXPRESSION_H__
 
-#include <istream>
-#include <map>
-#include <vector>
-#include <ostream>
-#include <set>
-#include <string>
-#include <yices_c.h>
-#include<ext/hash_map>
-
 #include "base/basic_types.h"
 #include "base/symbolic_expression.h"
-#include "base/symbolic_object.h"
-
-using std::istream;
-using std::map;
-using std::ostream;
-using std::set;
-using std::string;
-using std::vector;
 
 namespace crest {
 
 class DerefExpr : public SymbolicExpr {
  public:
-  DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t , value_t v);
+  DerefExpr(SymbolicExpr* addr, SymbolicObject* o, size_t size, value_t val);
+  DerefExpr::DerefExpr(const DerefExpr& de);
   ~DerefExpr();
-  size_t Size();
-  void AppendVars(set<var_t>* vars);
-  bool DependsOn(const map<var_t,type_t>& vars);
-  void AppendToString(string *s);
-  bool IsConcrete();
-  bool operator==(DerefExpr &e);
-  void bit_blast(yices_expr &e, yices_context &ctx, map<var_t, yices_var_decl> &x_decl);
+
+  DerefExpr* Clone() const;
+
+  void AppendVars(set<var_t>* vars) const;
+  bool DependsOn(const map<var_t,type_t>& vars) const;
+  void AppendToString(string *s) const;
+
+  bool IsConcrete() const { return false; }
+
+  yices_expr bit_blast(yices_context ctx) const;
 
  private:
   // The symbolic object corresponding to the dereference.
   const SymbolicObject *object_;
 
   // A symbolic expression representing the symbolic address of this deref.
-  SymbolicExpr *symbolic_addr_;
+  const SymbolicExpr *addr_;
 
-  unsigned char* concrete_bytes_;
+  const unsigned char* concrete_bytes_;
 };
 
 }  // namespace crest

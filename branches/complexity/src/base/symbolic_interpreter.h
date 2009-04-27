@@ -64,9 +64,9 @@ class SymbolicInterpreter {
 
  private:
   struct StackElem {
+    value_t concrete;
     SymbolicExpr* expr;  // NULL to indicate concrete.
     type_t ty;
-    value_t concrete;
   };
 
   // Symbolic objects.
@@ -74,9 +74,6 @@ class SymbolicInterpreter {
 
   // Stack.
   vector<StackElem> stack_;
-
-  // Predicate register (for when top of stack is a symbolic predicate).
-  SymbolicPred* pred_;
 
   // Is the top of the stack a function return value?
   bool return_value_;

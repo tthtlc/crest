@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "base/basic_types.h"
+#include "base/symbolic_expression.h"
 #include "base/symbolic_predicate.h"
 
 using std::istream;
@@ -35,7 +36,8 @@ class SymbolicPath {
   void Swap(SymbolicPath& sp);
 
   void Push(branch_id_t bid);
-  void Push(branch_id_t bid, SymbolicPred* constraint);
+  void Push(branch_id_t bid, SymbolicPred* constraint);  // deprecated
+  void Push(branch_id_t bid, SymbolicExpr* constraint) { }
   void Serialize(string* s) const;
   bool Parse(istream& s);
 

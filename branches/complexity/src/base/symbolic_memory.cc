@@ -18,6 +18,13 @@ namespace crest {
 
 SymbolicMemory::SymbolicMemory() { }
 
+SymbolicMemory::SymbolicMemory(const SymbolicMemory& m) : mem_(m.mem_) {
+  hash_map<addr_t,SymbolicExpr*>::iterator it;
+  for (it = mem_.begin(); it != mem_.end(); ++it) {
+    it->second = it->second->Clone();
+  }
+}
+
 
 SymbolicMemory::~SymbolicMemory() {
   hash_map<addr_t,SymbolicExpr*>::iterator it;
@@ -62,7 +69,7 @@ SymbolicExpr* SymbolicMemory::read(addr_t addr, type_t ty, value_t val) const {
     if (bytes[n-i-1] == NULL) {
       tmp = SymbolicExpr::NewConcreteExpr(types::U_CHAR, val & 0xFF);
     } else {
-      tmp = new SymbolicExpr(*bytes[n-i-1]);
+      tmp = bytes[n-i-1]->Clone();
     }
 
     // Add byte into concatenation.
@@ -92,11 +99,11 @@ void SymbolicMemory::write(addr_t addr, type_t ty, SymbolicExpr* e) {
   // Extract and write each byte.
   if (true /* little-endian */) {
     for (size_t i = 0; i < n; i++) {
-      mem_[addr + i] = SymbolicExpr::ExtractByte(*e, n - i + 1);
+      mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), n - i + 1);
     }
   } else /* big-endian */ {
     for (size_t i = 0; i < n; i++) {
-      mem_[addr + i] = SymbolicExpr::ExtractByte(*e, i);
+      mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), i);
     }
   }
 

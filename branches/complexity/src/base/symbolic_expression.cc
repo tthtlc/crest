@@ -13,6 +13,9 @@
  * 4/17/09
  */
 #include <assert.h>
+
+#include <yices_c.h>
+
 #include "base/symbolic_expression.h"
 #include "base/unary_expression.h"
 #include "base/binary_expression.h"
@@ -25,88 +28,63 @@ namespace crest {
 typedef map<var_t,value_t>::iterator It;
 typedef map<var_t,value_t>::const_iterator ConstIt;
 
-SymbolicExpr& SymbolicExpr::applyUnary(ops::unary_op_t op) {
-  UnaryExpr *un_exp = new UnaryExpr(op, this, size_in_bytes_, Apply(op, value_));
-  return *un_exp;
+SymbolicExpr::~SymbolicExpr() { }
+
+SymbolicExpr* SymbolicExpr::Clone() const {
+  return new SymbolicExpr(size_, value_);
 }
 
-SymbolicExpr& SymbolicExpr::applyBinary(SymbolicExpr &e, ops::binary_op_t op) {
-  BinaryExpr *bin_exp = new BinaryExpr(op, this, &e, RETURN_SIZE__(size_in_bytes_, e.size_in_bytes_), Apply(op, value_, e.value_));
-  return *bin_exp;
+yices_expr SymbolicExpr::bit_blast(yices_context ctx) const {
+  // TODO: Implement this method for size() > sizeof(unsigned long).
+  assert(size() <= sizeof(unsigned long));
+  return yices_mk_bv_constant(ctx, 8*size(), (unsigned long)value());
 }
 
-SymbolicExpr& SymbolicExpr::applyCompare(SymbolicExpr &e, ops::compare_op_t op) {
-  value_t res = (value_t)Apply(op, value_, e.value_);
-  CompareExpr *comp_exp = new CompareExpr(op, this, &e, 1, res);
-  return *comp_exp;
+SymbolicExpr* SymbolicExpr::NewConcreteExpr(type_t ty, value_t val) {
+  return new SymbolicExpr(kSizeOfType[ty], val);
 }
 
-SymbolicExpr& SymbolicExpr::applyDeref() {
-  //TODO:
-  SymbolicExpr *temp = new SymbolicExpr();
-  return *temp;
+SymbolicExpr* SymbolicExpr::NewUnaryExpr(type_t ty, value_t val,
+                                         ops::unary_op_t op, SymbolicExpr* e) {
+  return new UnaryExpr(op, e, kSizeOfType[ty], val);
 }
 
-value_t SymbolicExpr::Apply(ops::binary_op_t bin_op, value_t v1, value_t v2) {
-  switch(bin_op) {
-  case ops::ADD: return v1+v2;
-  case ops::SUBTRACT: return v1-v2;
-  case ops::MULTIPLY: return v1*v2;
-  case ops::SHIFT_L: return v1<<v2;
-  case ops::SHIFT_R: return v1>>v2;
-  case ops::BITWISE_AND: return v1&v2;
-  case ops::BITWISE_OR: return v1|v2;
-  case ops::BITWISE_XOR: return v1^v2;
-  case ops::CONCAT: return v1+v2;
-  case ops::EXTRACT: return v2;
-  default:
-    fprintf(stderr,"Unknown binary operator %d\n", bin_op);
-    exit(1);
-  }
+SymbolicExpr* SymbolicExpr::NewBinaryExpr(type_t ty, value_t val,
+                                          ops::binary_op_t op,
+                                          SymbolicExpr* e1, SymbolicExpr* e2) {
+  return new BinaryExpr(op, e1, e2, kSizeOfType[ty], val);
 }
 
-bool SymbolicExpr::Apply(ops::compare_op_t comp_op, value_t v1, value_t v2) {
-  switch(comp_op) {
-  case ops::EQ: return v1==v2;
-  case ops::NEQ: return v1!=v2;
-  case ops::GT: return v1>v2;
-  case ops::GE: return v1>=v2;
-  case ops::LT: return v1<v2;
-  case ops::LE: return v1<=v2;
-  default:
-    fprintf(stderr,"Unknown comparison operator %d\n", comp_op);
-    exit(1);
-  }
+SymbolicExpr* SymbolicExpr::NewCompareExpr(type_t ty, value_t val,
+                                           ops::compare_op_t op,
+                                           SymbolicExpr* e1, SymbolicExpr* e2) {
+  return new CompareExpr(op, e1, e2, kSizeOfType[ty], val);
 }
 
-value_t SymbolicExpr::Apply(ops::unary_op_t un_op, value_t v) {
-  switch(un_op) {
-  case ops::NEGATE: return 0 - v;
-  case ops::BITWISE_NOT: return ~v;
-  case ops::LOGICAL_NOT: return !v;
-  default:
-    fprintf(stderr, "Unknown unary operator %d\n", un_op);
-    exit(1);
-  }
+SymbolicExpr* SymbolicExpr::NewConstDeref(type_t ty, value_t val,
+                                          const SymbolicObject& obj,
+                                          addr_t addr) {
+  return new DerefExpr(NewConcreteExpr(types::U_LONG, addr),
+                       new SymbolicObject(obj), kSizeOfType[ty], val);
 }
 
-
-
-SymbolicExpr* SymbolicExpr::NewConcreteExpr(size_t s, value_t val) {
-  return new SymbolicExpr(val, s);
-}
-
-SymbolicExpr* SymbolicExpr::NewConstDeref(const SymbolicObject& obj, addr_t addr, size_t s, value_t val) {
-  DerefExpr *deref_expr = new DerefExpr(new SymbolicExpr(addr, SIZEOF_ULONG__), new SymbolicObject(obj), s, val);
-  return deref_expr;
+SymbolicExpr* SymbolicExpr::NewDeref(type_t ty, value_t val,
+                                     const SymbolicObject& obj,
+                                     SymbolicExpr* addr) {
+  return new DerefExpr(addr, new SymbolicObject(obj), kSizeOfType[ty], val);
 }
 
 SymbolicExpr* SymbolicExpr::Concatenate(SymbolicExpr *e1, SymbolicExpr *e2) {
-  return &e1->applyBinary(*e2, ops::CONCAT);
+  return new BinaryExpr(ops::CONCAT, e1, e2,
+                        e1->size() + e2->size(),
+                        (e1->value() << (8 * e2->size())) + e2->value());
 }
 
-SymbolicExpr* SymbolicExpr::ExtractByte(const SymbolicExpr& e, size_t i) {
-  return new BinaryExpr(ops::EXTRACT, new SymbolicExpr(e), new SymbolicExpr(i, SIZEOF_ULONG__), SIZEOF_ULONG__,0);
+SymbolicExpr* SymbolicExpr::ExtractByte(SymbolicExpr* e, size_t i) {
+  // Extract i-th most significant byte.
+  value_t val = (e->value() >> (e->size() - i - 1)) & 0xFF;
+  SymbolicExpr* i_e = NewConcreteExpr(types::U_LONG, i);
+  return new BinaryExpr(ops::EXTRACT, e, i_e,  1, val);
 }
 
 }  // namespace crest

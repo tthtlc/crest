@@ -11,14 +11,6 @@
 #ifndef BASE_BASIC_TYPES_H__
 #define BASE_BASIC_TYPES_H__
 
-#ifndef RESULT_SIZE__
-#define RETURN_SIZE__(t1, t2) (t1>t2)?t1:t2
-#endif
-
-#ifndef SIZEOF_ULONG__
-#define SIZEOF_ULONG__ sizeof(unsigned long)
-#endif
-
 #include <cstddef>
 
 namespace crest {

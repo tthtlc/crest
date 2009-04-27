@@ -33,9 +33,9 @@ class SymbolicObject {
   void write(SymbolicExpr* sym_addr, addr_t addr,
              SymbolicExpr* e, type_t ty, value_t val);
 
-  addr_t start() { return start_; }
-  addr_t end() { return start_ + size_; }
-  size_t size() { return size_; }
+  addr_t start() const { return start_; }
+  addr_t end() const { return start_ + size_; }
+  size_t size() const { return size_; }
 
  private:
   typedef std::pair<SymbolicExpr*,SymbolicExpr*> Write;
