@@ -157,6 +157,14 @@ void __CrestInit(__CREST_ID id) {
 void __CrestAtExit() {
   const SymbolicExecution& ex = SI->execution();
 
+  fprintf(stderr, "%zu\n", ex.path().constraints().size());
+  string s;
+  for (size_t i = 0; i < ex.path().constraints().size(); i++) {
+    s.clear();
+    ex.path().constraints()[i]->AppendToString(&s);
+    printf("%s\n", s.c_str());
+  }
+
   /* Write the execution out to file 'szd_execution'. */
   string buff;
   buff.reserve(1<<26);
@@ -210,7 +218,7 @@ void __CrestClearStack(__CREST_ID id) {
 
 void __CrestApply1(__CREST_ID id, __CREST_OP op,
                    __CREST_TYPE ty, __CREST_VALUE val) {
-  assert((op >= __CREST_NEGATE) && (op <= __CREST_L_NOT));
+  assert((op >= __CREST_NEGATE) && (op <= __CREST_CAST));
 
   if (!pre_symbolic)
     SI->ApplyUnaryOp(id,
