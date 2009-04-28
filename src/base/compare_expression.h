@@ -32,11 +32,13 @@ class CompareExpr : public SymbolicExpr {
   bool DependsOn(const map<var_t,type_t>& vars) const;
   void AppendToString(string *s) const;
   void Serialize(string* s) const;
+
   bool IsConcrete() const { return false; }
 
-  yices_expr bit_blast(yices_context ctx) const;
+  yices_expr BitBlast(yices_context ctx) const;
 
-  CompareExpr* castCompareExpr() { return this; }
+  const CompareExpr* CastCompareExpr() const { return this; }
+
   bool Equals(const SymbolicExpr &e) const;
 
   // Accessors

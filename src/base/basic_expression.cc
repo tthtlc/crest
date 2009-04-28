@@ -40,7 +40,7 @@ void BasicExpr::AppendToString(string* s) const {
   s->append(buff);
 }
 
-yices_expr BasicExpr::bit_blast(yices_context ctx) const {
+yices_expr BasicExpr::BitBlast(yices_context ctx) const {
   char buff[32];
   sprintf(buff, "x%u", var_);
   yices_var_decl decl = yices_get_var_decl_from_name(ctx, buff);
@@ -52,10 +52,8 @@ void BasicExpr::Serialize(string* s) const {
 }
 
 bool BasicExpr::Equals(const SymbolicExpr &e) const {
-	BasicExpr *b = e.castBasicExpr();
-	if(b)
-		return var_ == b->var_;
-	else
-		return false;
+  const BasicExpr* b = e.CastBasicExpr();
+  return (b != NULL) && (var_ == b->var_);
 }
+
 }  // namespace crest

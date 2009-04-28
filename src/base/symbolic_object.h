@@ -8,6 +8,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See LICENSE
 // for details.
 
+// TODO: Implement Equals.
+
 #ifndef BASE_SYMBOLIC_OBJECT_H__
 #define BASE_SYMBOLIC_OBJECT_H__
 
@@ -32,6 +34,8 @@ class SymbolicObject {
 
   void write(SymbolicExpr* sym_addr, addr_t addr,
              SymbolicExpr* e, type_t ty, value_t val);
+
+  bool Equals(const SymbolicObject& o) const { return false; }
 
   addr_t start() const { return start_; }
   addr_t end() const { return start_ + size_; }

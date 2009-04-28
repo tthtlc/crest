@@ -50,9 +50,9 @@ void BinaryExpr::AppendToString(string *s) const {
   s->append(")");
 }
 
-yices_expr BinaryExpr::bit_blast(yices_context ctx) const {
-  yices_expr e1 = left_->bit_blast(ctx);
-  yices_expr e2 = right_->bit_blast(ctx);
+yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
+  yices_expr e1 = left_->BitBlast(ctx);
+  yices_expr e2 = right_->BitBlast(ctx);
   unsigned end = 0, start = 0;
 
   switch (binary_op_) {
@@ -103,10 +103,10 @@ void BinaryExpr::Serialize(string* s) const {
 }
 
 bool BinaryExpr::Equals(const SymbolicExpr &e) const {
-	BinaryExpr *b = e.castBinaryExpr();
-	if(b)
-		return left_->Equals(*b->left_) && right_->Equals(*b->right_);
-	else
-		return false;
+  const BinaryExpr* b = e.CastBinaryExpr();
+  return ((b != NULL)
+          && (binary_op_ == b->binary_op_)
+          && left_->Equals(*b->left_)
+          && right_->Equals(*b->right_));
 }
 }  // namespace crest

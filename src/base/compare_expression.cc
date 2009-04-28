@@ -48,9 +48,9 @@ void CompareExpr::AppendToString(string *s) const {
   s->append(")");
 }
 
-yices_expr CompareExpr::bit_blast(yices_context ctx) const {
-  yices_expr e1 = left_->bit_blast(ctx);
-  yices_expr e2 = right_->bit_blast(ctx);
+yices_expr CompareExpr::BitBlast(yices_context ctx) const {
+  yices_expr e1 = left_->BitBlast(ctx);
+  yices_expr e2 = right_->BitBlast(ctx);
 
   switch (compare_op_) {
   case ops::EQ:
@@ -80,18 +80,18 @@ yices_expr CompareExpr::bit_blast(yices_context ctx) const {
 }
 
 void CompareExpr::Serialize(string* s) const {
-	s->append((char*)compare_op_, sizeof(compare_op_t));
-	s->push_back('(');
-	left_->Serialize(s);
-	right_->Serialize(s);
-	s->push_back(')');
+  s->append((char*)compare_op_, sizeof(compare_op_t));
+  s->push_back('(');
+  left_->Serialize(s);
+  right_->Serialize(s);
+  s->push_back(')');
 }
 
 bool CompareExpr::Equals(const SymbolicExpr &e) const {
-	CompareExpr *c = e.castCompareExpr();
-	if(c)
-		return left_->Equals(*c->left_) && right_->Equals(*c->right_);
-	else
-		return false;
+  const CompareExpr* c = e.CastCompareExpr();
+  return ((c != NULL)
+          && (compare_op_ == c->compare_op_)
+          && left_->Equals(*c->left_)
+          && right_->Equals(*c->right_));
 }
 }  // namespace crest

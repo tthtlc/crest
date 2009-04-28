@@ -134,7 +134,7 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
     //
     // Currently maintained as CompareExprs
 
-    yices_expr e = se.bit_blast(ctx);
+    yices_expr e = se.BitBlast(ctx);
 
     /*
     yices_expr pred;

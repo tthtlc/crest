@@ -34,7 +34,13 @@ SymbolicExpr* SymbolicExpr::Clone() const {
   return new SymbolicExpr(size_, value_);
 }
 
-yices_expr SymbolicExpr::bit_blast(yices_context ctx) const {
+bool SymbolicExpr::Equals(const SymbolicExpr &e) const {
+  return (e.IsConcrete()
+          && (value() == e.value())
+          && (size() == e.size()));
+}
+
+yices_expr SymbolicExpr::BitBlast(yices_context ctx) const {
   // TODO: Implement this method for size() > sizeof(unsigned long).
   assert(size() <= sizeof(unsigned long));
   return yices_mk_bv_constant(ctx, 8*size(), (unsigned long)value());

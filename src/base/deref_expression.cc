@@ -59,9 +59,17 @@ void DerefExpr::AppendToString(string *s) const {
   s->append(" (*?)");
 }
 
-yices_expr DerefExpr::bit_blast(yices_context ctx) const {
+yices_expr DerefExpr::BitBlast(yices_context ctx) const {
   assert(false);
   // TODO
+}
+
+bool DerefExpr::Equals(const SymbolicExpr& e) const {
+  const DerefExpr* d = e.CastDerefExpr();
+  return ((d != NULL)
+          && addr_->Equals(*d->addr_)
+          && object_->Equals(*d->object_)
+          && !memcmp(concrete_bytes_, d->concrete_bytes_, object_->size()));
 }
 
 }  // namespace crest
