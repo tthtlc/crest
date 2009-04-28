@@ -34,6 +34,14 @@ SymbolicExpr* SymbolicExpr::Clone() const {
   return new SymbolicExpr(size_, value_);
 }
 
+void SymbolicExpr::AppendToString(string* s) const {
+  assert(IsConcrete());
+
+  char buff[32];
+  sprintf(buff, "%lld", value());
+  s->append(buff);
+}
+
 bool SymbolicExpr::Equals(const SymbolicExpr &e) const {
   return (e.IsConcrete()
           && (value() == e.value())

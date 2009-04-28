@@ -38,9 +38,9 @@ bool UnaryExpr::DependsOn(const map<var_t,type_t>& vars) const {
 }
 
 void UnaryExpr::AppendToString(string *s) const {
-  char buff[32];
-  sprintf(buff, " (%u", unary_op_);
-  s->append(buff);
+  s->append("(");
+  s->append(kUnaryOpStr[unary_op_]);
+  s->append(" ");
   child_->AppendToString(s);
   s->append(")");
 }
@@ -65,7 +65,7 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void UnaryExpr::Serialize(string* s) const {
-  s->append((char*)unary_op_, sizeof(unary_op_t));
+  // s->append((char*)unary_op_, sizeof(unary_op_t));
   s->push_back('(');
   child_->Serialize(s);
   s->push_back(')');

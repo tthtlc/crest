@@ -42,10 +42,11 @@ bool BinaryExpr::DependsOn(const map<var_t,type_t>& vars) const {
 }
 
 void BinaryExpr::AppendToString(string *s) const {
-  char buff[32];
-  sprintf(buff, " (%u", binary_op_);
-  s->append(buff);
+  s->append("(");
+  s->append(kBinaryOpStr[binary_op_]);
+  s->append(" ");
   left_->AppendToString(s);
+  s->append(" ");
   right_->AppendToString(s);
   s->append(")");
 }
@@ -95,7 +96,7 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void BinaryExpr::Serialize(string* s) const {
-  s->append((char*)binary_op_, sizeof(binary_op_t));
+  // s->append((char*)binary_op_, sizeof(binary_op_t));
   s->push_back('(');
   left_->Serialize(s);
   right_->Serialize(s);

@@ -40,10 +40,11 @@ bool CompareExpr::DependsOn(const map<var_t,type_t>& vars) const {
 }
 
 void CompareExpr::AppendToString(string *s) const {
-  char buff[32];
-  sprintf(buff, " (%u", compare_op_);
-  s->append(buff);
+  s->append("(");
+  s->append(kCompareOpStr[compare_op_]);
+  s->append(" ");
   left_->AppendToString(s);
+  s->append(" ");
   right_->AppendToString(s);
   s->append(")");
 }
@@ -80,7 +81,7 @@ yices_expr CompareExpr::BitBlast(yices_context ctx) const {
 }
 
 void CompareExpr::Serialize(string* s) const {
-  s->append((char*)compare_op_, sizeof(compare_op_t));
+  // s->append((char*)compare_op_, sizeof(compare_op_t));
   s->push_back('(');
   left_->Serialize(s);
   right_->Serialize(s);
