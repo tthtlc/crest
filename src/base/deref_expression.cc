@@ -40,6 +40,8 @@ DerefExpr::DerefExpr(const DerefExpr& de)
 }
 
 DerefExpr::~DerefExpr() {
+  delete object_;
+  delete addr_;
   delete concrete_bytes_;
 }
 
