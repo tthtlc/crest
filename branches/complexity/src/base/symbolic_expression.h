@@ -52,7 +52,7 @@ class SymbolicExpr {
 
   virtual void AppendVars(set<var_t>* vars) const { }
   virtual bool DependsOn(const map<var_t,type_t>& vars) const { return false; }
-  virtual void AppendToString(string* s) const { }
+  virtual void AppendToString(string* s) const;
 
   virtual bool IsConcrete() const { return true; }
 
