@@ -53,6 +53,10 @@ using ops::unary_op_t;
 
 compare_op_t NegateCompareOp(compare_op_t op);
 
+extern const char* kCompareOpStr[];
+extern const char* kBinaryOpStr[];
+extern const char* kUnaryOpStr[];
+
 
 // C numeric types.
 
