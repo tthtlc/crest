@@ -34,6 +34,9 @@ class BinaryExpr : public SymbolicExpr {
   bool IsConcrete() const { return false; }
   yices_expr bit_blast(yices_context ctx) const;
 
+  BinaryExpr* castBinaryExpr() { return this; }
+  bool Equals(const SymbolicExpr &e) const;
+
   // Accessors
   const ops::binary_op_t get_binary_op() const { return binary_op_; }
   const SymbolicExpr* get_left() const { return left_; }

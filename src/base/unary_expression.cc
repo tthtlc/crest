@@ -64,4 +64,11 @@ yices_expr UnaryExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+bool UnaryExpr::Equals(const SymbolicExpr &e) const {
+	UnaryExpr *u = e.castUnaryExpr();
+	if(u)
+		return child_->Equals(*u->child_);
+	else
+		return false;
+}
 }  // namespace crest

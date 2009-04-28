@@ -38,7 +38,7 @@ void SymbolicPath::Push(branch_id_t bid) {
   branches_.push_back(bid);
 }
 
-void SymbolicPath::Push(branch_id_t bid, SymbolicPred* constraint) {
+void SymbolicPath::Push(branch_id_t bid, SymbolicExpr* constraint) {
   if (constraint) {
     constraints_.push_back(constraint);
     constraints_idx_.push_back(branches_.size());
@@ -47,7 +47,7 @@ void SymbolicPath::Push(branch_id_t bid, SymbolicPred* constraint) {
 }
 
 void SymbolicPath::Serialize(string* s) const {
-  typedef vector<SymbolicPred*>::const_iterator ConIt;
+  typedef vector<SymbolicExpr*>::const_iterator ConIt;
 
   // Write the path.
   size_t len = branches_.size();
@@ -64,7 +64,7 @@ void SymbolicPath::Serialize(string* s) const {
 }
 
 bool SymbolicPath::Parse(istream& s) {
-  typedef vector<SymbolicPred*>::iterator ConIt;
+  typedef vector<SymbolicExpr*>::iterator ConIt;
   size_t len;
 
   // Read the path.
@@ -84,7 +84,7 @@ bool SymbolicPath::Parse(istream& s) {
   constraints_.resize(len);
   s.read((char*)&constraints_idx_.front(), len * sizeof(size_t));
   for (ConIt i = constraints_.begin(); i != constraints_.end(); ++i) {
-    *i = new SymbolicPred();
+    //*i = new SymbolicExpr();
     if (!(*i)->Parse(s))
       return false;
   }

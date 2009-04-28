@@ -47,4 +47,11 @@ yices_expr BasicExpr::bit_blast(yices_context ctx) const {
   return yices_mk_var_from_decl(ctx, decl);
 }
 
+bool BasicExpr::Equals(const SymbolicExpr &e) const {
+	BasicExpr *b = e.castBasicExpr();
+	if(b)
+		return var_ == b->var_;
+	else
+		return false;
+}
 }  // namespace crest

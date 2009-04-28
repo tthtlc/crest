@@ -14,11 +14,7 @@
  */
 
 // TODO:
-//
-// (1) Implement proper equality checking for SymbolicExpr classes
-//     (with virtual methods for each subtype.
-//
-// (2) Implement parsing and serialization.
+// (1) Implement parsing and serialization.
 
 #ifndef BASE_SYMBOLIC_EXPRESSION_H__
 #define BASE_SYMBOLIC_EXPRESSION_H__
@@ -41,6 +37,11 @@ typedef void* yices_context;
 namespace crest {
 
 class SymbolicObject;
+class UnaryExpr;
+class BinaryExpr;
+class DerefExpr;
+class CompareExpr;
+class BasicExpr;
 
 class SymbolicExpr {
  public:
@@ -84,6 +85,16 @@ class SymbolicExpr {
   static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
 
   static SymbolicExpr* ExtractByte(SymbolicExpr* e, size_t i);
+
+  //Virtual methods for implmenting Equals
+  virtual UnaryExpr* castUnaryExpr() const { return NULL; }
+  virtual BinaryExpr* castBinaryExpr() const { return NULL; }
+  virtual DerefExpr* castDerefExpr() const { return NULL; }
+  virtual CompareExpr* castCompareExpr() const { return NULL; }
+  virtual BasicExpr* castBasicExpr() const { return NULL; }
+
+  //Equals
+  virtual bool Equals(const SymbolicExpr &e) const { return false; }
 
   // Accessors.
   value_t value() const { return value_; }
