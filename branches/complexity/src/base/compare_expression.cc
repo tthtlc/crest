@@ -79,6 +79,14 @@ yices_expr CompareExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+void CompareExpr::Serialize(string* s) const {
+	s->append((char*)compare_op_, sizeof(compare_op_t));
+	s->push_back('(');
+	left_->Serialize(s);
+	right_->Serialize(s);
+	s->push_back(')');
+}
+
 bool CompareExpr::Equals(const SymbolicExpr &e) const {
 	CompareExpr *c = e.castCompareExpr();
 	if(c)

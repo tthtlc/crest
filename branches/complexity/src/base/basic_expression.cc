@@ -47,6 +47,10 @@ yices_expr BasicExpr::bit_blast(yices_context ctx) const {
   return yices_mk_var_from_decl(ctx, decl);
 }
 
+void BasicExpr::Serialize(string* s) const {
+  s->append((char*)var_, sizeof(var_t));
+}
+
 bool BasicExpr::Equals(const SymbolicExpr &e) const {
 	BasicExpr *b = e.castBasicExpr();
 	if(b)

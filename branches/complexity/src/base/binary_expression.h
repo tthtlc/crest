@@ -31,6 +31,7 @@ class BinaryExpr : public SymbolicExpr {
   void AppendVars(set<var_t>* vars) const;
   bool DependsOn(const map<var_t,type_t>& vars) const;
   void AppendToString(string *s) const;
+  void Serialize(string* s) const;
   bool IsConcrete() const { return false; }
   yices_expr bit_blast(yices_context ctx) const;
 

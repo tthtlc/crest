@@ -44,7 +44,7 @@ class BasicExpr : public SymbolicExpr {
   bool IsConcrete() const { return false; }
 
   yices_expr bit_blast(yices_context ctx) const;
-  void Serialize(string* s) const { }
+  void Serialize(string* s) const;
   BasicExpr* castBasicExpr() { return this; }
   bool Equals(const SymbolicExpr &e) const;
 

@@ -64,6 +64,13 @@ yices_expr UnaryExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+void UnaryExpr::Serialize(string* s) const {
+	s->append((char*)unary_op_, sizeof(unary_op_t));
+	s->push_back('(');
+	child_->Serialize(s);
+	s->push_back(')');
+}
+
 bool UnaryExpr::Equals(const SymbolicExpr &e) const {
 	UnaryExpr *u = e.castUnaryExpr();
 	if(u)
