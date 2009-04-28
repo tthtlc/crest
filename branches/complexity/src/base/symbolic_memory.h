@@ -43,6 +43,9 @@ class SymbolicMemory {
 
   void concretize(addr_t addr, size_t n);
 
+  // For debugging.
+  void Dump() const;
+
  private:
   __gnu_cxx::hash_map<addr_t, SymbolicExpr*> mem_;
 };
