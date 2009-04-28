@@ -46,27 +46,27 @@ SymbolicInterpreter::SymbolicInterpreter(const vector<value_t>& input)
 }
 
 
-// void SymbolicInterpreter::DumpMemory() {
-//   for (ConstMemIt i = mem_.begin(); i != mem_.end(); ++i) {
-//     string s;
-//     i->second->AppendToString(&s);
-//     fprintf(stderr, "%lu: %s [%d]\n", i->first, s.c_str(), *(int*)(i->first));
-//   }
-//   for (size_t i = 0; i < stack_.size(); i++) {
-//     string s;
-//     if (stack_[i].expr) {
-//       stack_[i].expr->AppendToString(&s);
-//     } else if ((i == stack_.size() - 1) && pred_) {
-//       pred_->AppendToString(&s);
-//     }
-//     fprintf(stderr, "s%zu: %lld [ %s ]\n", i, stack_[i].concrete, s.c_str());
-//   }
-// }
+void SymbolicInterpreter::DumpMemory() {
+  fprintf(stderr, "\n");
+  mem_.Dump();
+
+  for (size_t i = 0; i < stack_.size(); i++) {
+    string s;
+    if (stack_[i].expr) {
+      stack_[i].expr->AppendToString(&s);
+    }
+    fprintf(stderr, "s%zu (%d): %lld [ %s ]\n", i,
+            stack_[i].ty, stack_[i].concrete, s.c_str());
+  }
+
+  fprintf(stderr, "\n");
+}
 
 
 void SymbolicInterpreter::ClearStack(id_t id) {
   IFDEBUG(fprintf(stderr, "clear\n"));
-  for (vector<StackElem>::const_iterator it = stack_.begin(); it != stack_.end(); ++it) {
+  vector<StackElem>::const_iterator it;
+  for (it = stack_.begin(); it != stack_.end(); ++it) {
     delete it->expr;
   }
   stack_.clear();
@@ -155,7 +155,7 @@ void SymbolicInterpreter::Store(id_t id, addr_t addr) {
 
 
 void SymbolicInterpreter::Write(id_t id, addr_t addr) {
-  IFDEBUG(fprintf(stderr, "store %lu\n", addr));
+  IFDEBUG(fprintf(stderr, "write %lu\n", addr));
   assert(stack_.size() > 1);
 
   const StackElem& dest = *(stack_.rbegin()+1);
