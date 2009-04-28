@@ -45,8 +45,8 @@ void UnaryExpr::AppendToString(string *s) const {
   s->append(")");
 }
 
-yices_expr UnaryExpr::bit_blast(yices_context ctx) const {
-  yices_expr e = child_->bit_blast(ctx);
+yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
+  yices_expr e = child_->BitBlast(ctx);
 
   switch (unary_op_) {
   case ops::NEGATE:
@@ -65,17 +65,16 @@ yices_expr UnaryExpr::bit_blast(yices_context ctx) const {
 }
 
 void UnaryExpr::Serialize(string* s) const {
-	s->append((char*)unary_op_, sizeof(unary_op_t));
-	s->push_back('(');
-	child_->Serialize(s);
-	s->push_back(')');
+  s->append((char*)unary_op_, sizeof(unary_op_t));
+  s->push_back('(');
+  child_->Serialize(s);
+  s->push_back(')');
 }
 
 bool UnaryExpr::Equals(const SymbolicExpr &e) const {
-	UnaryExpr *u = e.castUnaryExpr();
-	if(u)
-		return child_->Equals(*u->child_);
-	else
-		return false;
+  const UnaryExpr* u = e.CastUnaryExpr();
+  return ((u != NULL)
+          && (unary_op_ == u->unary_op_)
+          && child_->Equals(*u->child_));
 }
 }  // namespace crest

@@ -53,10 +53,11 @@ class SymbolicExpr {
   virtual void AppendVars(set<var_t>* vars) const { }
   virtual bool DependsOn(const map<var_t,type_t>& vars) const { return false; }
   virtual void AppendToString(string* s) const { }
+
   virtual bool IsConcrete() const { return true; }
 
   // Convert to Yices.
-  virtual yices_expr bit_blast(yices_context ctx) const;
+  virtual yices_expr BitBlast(yices_context ctx) const;
 
   // Serialization.
   static SymbolicExpr* Parse(istream& s) { return NULL; }
@@ -87,15 +88,15 @@ class SymbolicExpr {
 
   static SymbolicExpr* ExtractByte(SymbolicExpr* e, size_t i);
 
-  //Virtual methods for implmenting Equals
-  virtual UnaryExpr* castUnaryExpr() const { return NULL; }
-  virtual BinaryExpr* castBinaryExpr() const { return NULL; }
-  virtual DerefExpr* castDerefExpr() const { return NULL; }
-  virtual CompareExpr* castCompareExpr() const { return NULL; }
-  virtual BasicExpr* castBasicExpr() const { return NULL; }
+  // Virtual methods for dynamic casting.
+  virtual const UnaryExpr* CastUnaryExpr() const { return NULL; }
+  virtual const BinaryExpr* CastBinaryExpr() const { return NULL; }
+  virtual const DerefExpr* CastDerefExpr() const { return NULL; }
+  virtual const CompareExpr* CastCompareExpr() const { return NULL; }
+  virtual const BasicExpr* CastBasicExpr() const { return NULL; }
 
-  //Equals
-  virtual bool Equals(const SymbolicExpr &e) const { return false; }
+  // Equals.
+  virtual bool Equals(const SymbolicExpr &e) const;
 
   // Accessors.
   value_t value() const { return value_; }

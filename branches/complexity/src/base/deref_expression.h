@@ -12,7 +12,7 @@
  * Author: Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
  */
 
-//TODO: Implement Equals, Parse and Serialize
+// TODO: Implement Parse and Serialize
 
 #ifndef DEREF_EXPRESSION_H__
 #define DEREF_EXPRESSION_H__
@@ -36,7 +36,11 @@ class DerefExpr : public SymbolicExpr {
 
   bool IsConcrete() const { return false; }
 
-  yices_expr bit_blast(yices_context ctx) const;
+  yices_expr BitBlast(yices_context ctx) const;
+
+  const DerefExpr* CastDerefExpr() const { return this; }
+
+  bool Equals(const SymbolicExpr &e) const;
 
  private:
   // The symbolic object corresponding to the dereference.
