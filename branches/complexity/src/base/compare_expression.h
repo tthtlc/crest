@@ -36,6 +36,9 @@ class CompareExpr : public SymbolicExpr {
 
   yices_expr bit_blast(yices_context ctx) const;
 
+  CompareExpr* castCompareExpr() { return this; }
+  bool Equals(const SymbolicExpr &e) const;
+
   // Accessors
   ops::compare_op_t compare_op() const { return compare_op_; }
   const SymbolicExpr* left() const { return left_; }

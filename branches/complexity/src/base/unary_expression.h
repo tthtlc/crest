@@ -32,6 +32,8 @@ class UnaryExpr : public SymbolicExpr {
   bool IsConcrete() const { return false; }
 
   yices_expr bit_blast(yices_context ctx) const;
+  UnaryExpr* castUnaryExpr() { return this; }
+  bool Equals(const SymbolicExpr &e) const;
 
   // Accessors
   ops::unary_op_t unary_op() const { return unary_op_; }

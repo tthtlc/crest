@@ -27,11 +27,11 @@ class YicesSolver {
  public:
   static bool IncrementalSolve(const vector<value_t>& old_soln,
 			       const map<var_t,type_t>& vars,
-                               const vector<const SymbolicPred*>& constraints,
+                               const vector<const SymbolicExpr*>& constraints,
 			       map<var_t,value_t>* soln);
 
   static bool Solve(const map<var_t,type_t>& vars,
-                    const vector<const SymbolicPred*>& constraints,
+                    const vector<const SymbolicExpr*>& constraints,
 		    map<var_t,value_t>* soln);
 
   static bool ReadSolutionFromFileOrDie(const string& file,

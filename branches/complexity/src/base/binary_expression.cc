@@ -94,4 +94,11 @@ yices_expr BinaryExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+bool BinaryExpr::Equals(const SymbolicExpr &e) const {
+	BinaryExpr *b = e.castBinaryExpr();
+	if(b)
+		return left_->Equals(*b->left_) && right_->Equals(*b->right_);
+	else
+		return false;
+}
 }  // namespace crest

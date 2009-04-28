@@ -29,12 +29,12 @@ using std::set;
 
 namespace crest {
 
-typedef vector<const SymbolicPred*>::const_iterator PredIt;
+typedef vector<const SymbolicExpr*>::const_iterator PredIt;
 
 
 bool YicesSolver::IncrementalSolve(const vector<value_t>& old_soln,
 				   const map<var_t,type_t>& vars,
-				   const vector<const SymbolicPred*>& constraints,
+				   const vector<const SymbolicExpr*>& constraints,
 				   map<var_t,value_t>* soln) {
   set<var_t> tmp;
   typedef set<var_t>::const_iterator VarIt;
@@ -75,7 +75,7 @@ bool YicesSolver::IncrementalSolve(const vector<value_t>& old_soln,
   }
 
   // Generate the list of dependent constraints.
-  vector<const SymbolicPred*> dependent_constraints;
+  vector<const SymbolicExpr*> dependent_constraints;
   for (PredIt i = constraints.begin(); i != constraints.end(); ++i) {
     if ((*i)->DependsOn(dependent_vars))
       dependent_constraints.push_back(*i);
@@ -100,7 +100,7 @@ bool YicesSolver::IncrementalSolve(const vector<value_t>& old_soln,
 
 
 bool YicesSolver::Solve(const map<var_t,type_t>& vars,
-			const vector<const SymbolicPred*>& constraints,
+			const vector<const SymbolicExpr*>& constraints,
 			map<var_t,value_t>* soln) {
 
   typedef map<var_t,type_t>::const_iterator VarIt;
@@ -126,16 +126,17 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
 
   // Assertions.
   for (PredIt i = constraints.begin(); i != constraints.end(); ++i) {
-    const SymbolicExpr& se = (*i)->expr();
+    const SymbolicExpr& se = **i; //(*i)->expr();
 
     // TODO: Have to decide whether we're using SymbolicPred's or
     // CompareExpr's here and in the symbolic interpreter, symbolic path,
     // symbolic execution, etc.
     //
-    // (Currently, we compute CompareExpr's in 
+    // Currently maintained as CompareExprs
 
     yices_expr e = se.bit_blast(ctx);
 
+    /*
     yices_expr pred;
     switch((*i)->op()) {
     case ops::EQ:    pred = yices_mk_eq(ctx, e, zero); break;
@@ -153,7 +154,12 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
       exit(1);
     }
     yices_assert(ctx, pred);
+    */
+    yices_assert(ctx, e);
   }
+
+
+  //CHANGE: With symbolic expression, simply assert it!
 
   bool success = (yices_check(ctx) == l_true);
   if (success) {

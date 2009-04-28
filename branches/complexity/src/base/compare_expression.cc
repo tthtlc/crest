@@ -79,4 +79,11 @@ yices_expr CompareExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+bool CompareExpr::Equals(const SymbolicExpr &e) const {
+	CompareExpr *c = e.castCompareExpr();
+	if(c)
+		return left_->Equals(*c->left_) && right_->Equals(*c->right_);
+	else
+		return false;
+}
 }  // namespace crest

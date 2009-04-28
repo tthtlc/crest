@@ -336,25 +336,29 @@ bool Search::SolveAtBranch(const SymbolicExecution& ex,
                            size_t branch_idx,
                            vector<value_t>* input) {
 
-  const vector<SymbolicPred*>& constraints = ex.path().constraints();
+  const vector<SymbolicExpr*>& constraints = ex.path().constraints();
 
   // Optimization: If any of the previous constraints are idential to the
   // branch_idx-th constraint, immediately return false.
+  // Commenting out for time-being
+  /*
   for (int i = static_cast<int>(branch_idx) - 1; i >= 0; i--) {
     if (constraints[branch_idx]->Equal(*constraints[i]))
       return false;
   }
-
-  vector<const SymbolicPred*> cs(constraints.begin(),
+  */
+  vector<const SymbolicExpr*> cs(constraints.begin(),
 				 constraints.begin()+branch_idx+1);
   map<var_t,value_t> soln;
-  constraints[branch_idx]->Negate();
+  //constraints[branch_idx]->Negate();
+  SymbolicExpr *tempExpr = constraints[branch_idx];
+  cs[branch_idx] = SymbolicExpr::NewUnaryExpr(types::BOOLEAN, 1-tempExpr->value(), ops::NEGATE, tempExpr);
   // fprintf(stderr, "Yices . . . ");
   //bool success = YicesSolver::IncrementalSolve(ex.inputs(), ex.vars(), cs, &soln);
   //TODO: Implement IncrementalSolve
   bool success = YicesSolver::Solve(ex.vars(), cs, &soln);
   // fprintf(stderr, "%d\n", success);
-  constraints[branch_idx]->Negate();
+  //constraints[branch_idx]->Negate();
 
   if (success) {
     // Merge the solution with the previous input to get the next
@@ -1385,7 +1389,7 @@ bool CfgHeuristicSearch::DoBoundedBFS(int i, int depth, const SymbolicExecution&
 
   SymbolicExecution cur_ex;
   vector<value_t> input;
-  const vector<SymbolicPred*>& constraints = prev_ex.path().constraints();
+  const vector<SymbolicExpr*>& constraints = prev_ex.path().constraints();
   for (size_t j = static_cast<size_t>(i); j < constraints.size(); j++) {
     if (!SolveAtBranch(prev_ex, j, &input)) {
       continue;
