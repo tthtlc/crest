@@ -19,6 +19,25 @@ compare_op_t NegateCompareOp(compare_op_t op) {
   return static_cast<compare_op_t>(op ^ 1);
 }
 
+const char* kCompareOpStr[] = {
+  "==", "!=",
+  ">", "<", ">=", "<=",
+  ">", "<", ">=", "<=",
+};
+
+const char* kBinaryOpStr[] = {
+  "+", "-", "*",
+  "/", "/",
+  "%", "%",
+  "<<", ">>>", ">>",
+  "&", "|", "^",
+  "@", "<-->", "?"
+};
+
+const char* kUnaryOpStr[] = {
+  "-", "!", "~", "cast"
+};
+
 const char* kMinValueStr[] = {
   "0",
   "-128",
