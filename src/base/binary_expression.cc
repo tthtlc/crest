@@ -94,6 +94,14 @@ yices_expr BinaryExpr::bit_blast(yices_context ctx) const {
   }
 }
 
+void BinaryExpr::Serialize(string* s) const {
+  s->append((char*)binary_op_, sizeof(binary_op_t));
+  s->push_back('(');
+  left_->Serialize(s);
+  right_->Serialize(s);
+  s->push_back(')');
+}
+
 bool BinaryExpr::Equals(const SymbolicExpr &e) const {
 	BinaryExpr *b = e.castBinaryExpr();
 	if(b)

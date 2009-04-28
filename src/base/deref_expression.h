@@ -12,6 +12,8 @@
  * Author: Sudeep Juvekar (sjuvekar@eecs.berkeley.edu)
  */
 
+//TODO: Implement Equals, Parse and Serialize
+
 #ifndef DEREF_EXPRESSION_H__
 #define DEREF_EXPRESSION_H__
 

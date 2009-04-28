@@ -14,7 +14,8 @@
  */
 
 // TODO:
-// (1) Implement parsing and serialization.
+// (1) Implement Parse
+// Serialization is done using ( ) parantheses and prefix notation.
 
 #ifndef BASE_SYMBOLIC_EXPRESSION_H__
 #define BASE_SYMBOLIC_EXPRESSION_H__
