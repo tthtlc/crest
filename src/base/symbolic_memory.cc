@@ -34,6 +34,19 @@ SymbolicMemory::~SymbolicMemory() {
 }
 
 
+void SymbolicMemory::Dump() const {
+  string s;
+
+  hash_map<addr_t,SymbolicExpr*>::const_iterator it;
+  for (it = mem_.begin(); it != mem_.end(); ++it) {
+    s.clear();
+    it->second->AppendToString(&s);
+    fprintf(stderr, "*%lu (%zu): %lld [ %s ]\n", it->first,
+            it->second->size(), it->second->value(), s.c_str());
+  }
+}
+
+
 SymbolicExpr* SymbolicMemory::read(addr_t addr, type_t ty, value_t val) const {
   // For now, ignore structs.
   if (ty == types::STRUCT)
@@ -45,13 +58,15 @@ SymbolicExpr* SymbolicMemory::read(addr_t addr, type_t ty, value_t val) const {
   SymbolicExpr* bytes[8];
   if (true /* little-endian */) {
     for (size_t i = 0; i < n; i++) {
-      hash_map<addr_t,SymbolicExpr*>::const_iterator it = mem_.find(n - i - 1);
+      hash_map<addr_t,SymbolicExpr*>::const_iterator it;
+      it = mem_.find(addr + n - i - 1);
       bytes[i] = (it == mem_.end()) ? NULL : it->second;
       symbolic = symbolic || (bytes[i] != NULL);
     }
   } else /* big-endian */ {
     for (size_t i = 0; i < n; i++) {
-      hash_map<addr_t,SymbolicExpr*>::const_iterator it = mem_.find(i);
+      hash_map<addr_t,SymbolicExpr*>::const_iterator it;
+      it = mem_.find(addr + i);
       bytes[i] = (it == mem_.end()) ? NULL : it->second;
       symbolic = symbolic || (bytes[i] != NULL);
     }
@@ -99,10 +114,12 @@ void SymbolicMemory::write(addr_t addr, type_t ty, SymbolicExpr* e) {
   // Extract and write each byte.
   if (true /* little-endian */) {
     for (size_t i = 0; i < n; i++) {
+      // TODO: Leaks memory.
       mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), n - i + 1);
     }
   } else /* big-endian */ {
     for (size_t i = 0; i < n; i++) {
+      // TODO: Leaks memory.
       mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), i);
     }
   }
