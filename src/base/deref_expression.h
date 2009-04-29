@@ -39,7 +39,7 @@ class DerefExpr : public SymbolicExpr {
   yices_expr BitBlast(yices_context ctx) const;
 
   const DerefExpr* CastDerefExpr() const { return this; }
-
+  void Serialize(string* s) const;
   bool Equals(const SymbolicExpr &e) const;
 
  private:

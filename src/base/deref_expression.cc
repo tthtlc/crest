@@ -61,6 +61,10 @@ void DerefExpr::AppendToString(string *s) const {
   s->append(" (*?)");
 }
 
+void DerefExpr::Serialize(string *s) const {
+  //TODO
+}
+
 yices_expr DerefExpr::BitBlast(yices_context ctx) const {
   assert(false);
   // TODO

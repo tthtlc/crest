@@ -352,7 +352,7 @@ bool Search::SolveAtBranch(const SymbolicExecution& ex,
   map<var_t,value_t> soln;
   //constraints[branch_idx]->Negate();
   SymbolicExpr *tempExpr = constraints[branch_idx];
-  cs[branch_idx] = SymbolicExpr::NewUnaryExpr(types::BOOLEAN, 1-tempExpr->value(), ops::NEGATE, tempExpr);
+  cs[branch_idx] = SymbolicExpr::NewUnaryExpr(types::BOOLEAN, 1-tempExpr->value(), ops::LOGICAL_NOT, tempExpr);
   // fprintf(stderr, "Yices . . . ");
   //bool success = YicesSolver::IncrementalSolve(ex.inputs(), ex.vars(), cs, &soln);
   //TODO: Implement IncrementalSolve

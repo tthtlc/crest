@@ -22,6 +22,7 @@
 #include "base/compare_expression.h"
 #include "base/deref_expression.h"
 #include "base/symbolic_object.h"
+#include "base/basic_expression.h"
 
 namespace crest {
 
@@ -99,6 +100,77 @@ SymbolicExpr* SymbolicExpr::ExtractByte(SymbolicExpr* e, size_t i) {
   value_t val = (e->value() >> (e->size() - i - 1)) & 0xFF;
   SymbolicExpr* i_e = NewConcreteExpr(types::U_LONG, i);
   return new BinaryExpr(ops::EXTRACT, e, i_e,  1, val);
+}
+
+SymbolicExpr* SymbolicExpr::Parse(istream& s) {
+  value_t* val = new value_t(sizeof(value_t));
+  size_t* siz = new size_t(sizeof(size_t));
+  var_t* var = new var_t(sizeof(var_t));
+  char *un_op = new char[__SIZEOF_UNARY_OP];
+  char *bin_op = new char[__SIZEOF_BINARY_OP];
+  char *cmp_op = new char[__SIZEOF_COMPARE_OP];
+  SymbolicExpr *left = NULL, *right = NULL, *child=NULL;
+  compare_op_t cmp_op_ = ops::EQ;
+  binary_op_t bin_op_ = ops::ADD;
+  unary_op_t un_op_ = ops::NEGATE;
+
+  s.read((char *)val, sizeof(value_t));
+	  if(s.fail()) return NULL;
+  s.read((char *)siz, sizeof(size_t));
+	  if(s.fail()) return NULL;
+
+  char type_ = s.get();
+  switch(type_) {
+
+  case BASIC_NODE_TYPE:
+	  s.read((char*)var, sizeof(var_t));
+	  if(s.fail()) return NULL;
+	  return new BasicExpr(*siz, *val, *var);
+
+  case COMPARE_NODE_TYPE:
+	  s.read(cmp_op, __SIZEOF_COMPARE_OP);
+	  if(s.fail()) return NULL;
+	  cmp_op_ = (compare_op_t)atoi(cmp_op);
+	  left = Parse(s);
+	  right = Parse(s);
+	  return new CompareExpr(cmp_op_, left, right, *siz, *val);
+
+  case BINARY_NODE_TYPE:
+	  s.read(bin_op, __SIZEOF_BINARY_OP);
+	  if(s.fail()) return NULL;
+	  bin_op_ = (binary_op_t)atoi(bin_op);
+	  left = Parse(s);
+	  right = Parse(s);
+	  return new BinaryExpr(bin_op_, left, right, *siz, *val);
+
+  case UNARY_NODE_TYPE:
+	  s.read(un_op, __SIZEOF_UNARY_OP);
+	  if(s.fail()) return NULL;
+	  un_op_ = (unary_op_t)atoi(un_op);
+	  child = Parse(s);
+	  return new UnaryExpr(un_op_, child, *siz, *val);
+
+  case DEREF_NODE_TYPE:
+	  //TODO
+	  return NULL;
+
+  case CONST_NODE_TYPE:
+	  return new SymbolicExpr(*siz, *val);
+
+  default:
+	  fprintf(stderr, "Unknown type of node: '%c'....exiting\n", type_);
+	  exit(1);
+  }
+}
+
+void SymbolicExpr::Serialize(string *s) const {
+	SymbolicExpr::Serialize(s, CONST_NODE_TYPE);
+}
+
+void SymbolicExpr::Serialize(string *s, char c) const {
+  s->append((char*)&value_, sizeof(value_t));
+  s->append((char*)&size_, sizeof(size_t));
+  s->push_back(c);
 }
 
 }  // namespace crest

@@ -48,7 +48,9 @@ yices_expr BasicExpr::BitBlast(yices_context ctx) const {
 }
 
 void BasicExpr::Serialize(string* s) const {
-  // s->append((char*)var_, sizeof(var_t));
+	SymbolicExpr::Serialize(s, BASIC_NODE_TYPE);
+	//s->push_back(BASIC_NODE_TYPE);
+	s->append((char*)&var_, sizeof(var_t));
 }
 
 bool BasicExpr::Equals(const SymbolicExpr &e) const {

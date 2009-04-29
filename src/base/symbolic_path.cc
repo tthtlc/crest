@@ -84,9 +84,11 @@ bool SymbolicPath::Parse(istream& s) {
   constraints_.resize(len);
   s.read((char*)&constraints_idx_.front(), len * sizeof(size_t));
   for (ConIt i = constraints_.begin(); i != constraints_.end(); ++i) {
-    //*i = new SymbolicExpr();
-    if (!(*i)->Parse(s))
-      return false;
+    SymbolicExpr *temp = SymbolicExpr::Parse(s);
+    if(temp == NULL)
+       return false;
+     *i = temp;
+
   }
 
   return !s.fail();

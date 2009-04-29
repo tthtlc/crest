@@ -155,11 +155,10 @@ bool YicesSolver::Solve(const map<var_t,type_t>& vars,
     }
     yices_assert(ctx, pred);
     */
+    //CHANGE: With symbolic expression, simply assert it!
     yices_assert(ctx, e);
   }
 
-
-  //CHANGE: With symbolic expression, simply assert it!
 
   bool success = (yices_check(ctx) == l_true);
   if (success) {

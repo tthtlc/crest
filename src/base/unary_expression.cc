@@ -58,6 +58,10 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
   case ops::BITWISE_NOT:
     return yices_mk_bv_not(ctx, e);
 
+  case ops::CAST:
+	fprintf(stderr, "Cast not handled yet!...exiting\n");
+	exit(1);
+
   default:
     fprintf(stderr, "Unknown unary operator: %d\n", unary_op_);
     exit(1);
@@ -65,10 +69,10 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void UnaryExpr::Serialize(string* s) const {
-  // s->append((char*)unary_op_, sizeof(unary_op_t));
-  s->push_back('(');
-  child_->Serialize(s);
-  s->push_back(')');
+	SymbolicExpr::Serialize(s, UNARY_NODE_TYPE);
+	//s->push_back(UNARY_NODE_TYPE);
+	s->append(__UNARY_OP_STR[unary_op_], __SIZEOF_UNARY_OP);
+	child_->Serialize(s);
 }
 
 bool UnaryExpr::Equals(const SymbolicExpr &e) const {
