@@ -65,7 +65,6 @@ class SymbolicExpr {
   //Serialization: Format
   // Value | size | Node type | operator/var | children
   virtual void Serialize(string* s) const;
-  void Serialize(string* s, char c) const;
 
   // Factory methods for constructing symbolic expressions.
   static SymbolicExpr* NewConcreteExpr(type_t ty, value_t val);
@@ -111,6 +110,18 @@ class SymbolicExpr {
   SymbolicExpr(size_t size, value_t value)
     : value_(value), size_(size) { }
 
+  //Serializing with a Tag
+  void Serialize(string* s, char c) const;
+
+  enum kNodeTags {
+	  kBasicNodeTag = 0,
+	  kCompareNodeTag = 1,
+	  kBinaryNodeTag = 2,
+	  kUnaryNodeTag = 3,
+	  kDerefNodeTag = 4,
+	  kConstNodeTag = 5
+
+  };
  private:
   const value_t value_;
   const size_t size_;

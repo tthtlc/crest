@@ -69,9 +69,8 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void UnaryExpr::Serialize(string* s) const {
-	SymbolicExpr::Serialize(s, UNARY_NODE_TYPE);
-	//s->push_back(UNARY_NODE_TYPE);
-	s->append(__UNARY_OP_STR[unary_op_], __SIZEOF_UNARY_OP);
+	SymbolicExpr::Serialize(s, kUnaryNodeTag);
+	s->push_back(unary_op_);
 	child_->Serialize(s);
 }
 

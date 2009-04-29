@@ -81,9 +81,8 @@ yices_expr CompareExpr::BitBlast(yices_context ctx) const {
 }
 
 void CompareExpr::Serialize(string* s) const {
-  SymbolicExpr::Serialize(s, COMPARE_NODE_TYPE);
-  //s->push_back(COMPARE_NODE_TYPE);
-  s->append(__COMPARE_OP_STR[compare_op_], __SIZEOF_COMPARE_OP);
+  SymbolicExpr::Serialize(s, kCompareNodeTag);
+  s->push_back(compare_op_);
   left_->Serialize(s);
   right_->Serialize(s);
 }
