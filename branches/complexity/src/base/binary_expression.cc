@@ -86,7 +86,7 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
     return yices_mk_bv_concat(ctx, e1, e2);
   case ops::EXTRACT:
     // Assumption: right_ is concrete.
-    end = 8*(size() - right_->value()) - 1;
+    end = 8*(left_->size() - right_->value()) - 1;
     start = end - 7;
     return yices_mk_bv_extract(ctx, end, start, e1);
   default:

@@ -115,7 +115,7 @@ void SymbolicMemory::write(addr_t addr, type_t ty, SymbolicExpr* e) {
   if (true /* little-endian */) {
     for (size_t i = 0; i < n; i++) {
       // TODO: Leaks memory.
-      mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), n - i + 1);
+      mem_[addr + i] = SymbolicExpr::ExtractByte(e->Clone(), n - i - 1);
     }
   } else /* big-endian */ {
     for (size_t i = 0; i < n; i++) {
