@@ -2,7 +2,7 @@
 
 DIR=`dirname $0`/..
 CILLY=${DIR}/cil/bin/cilly
-YICES_DIR=/Users/jburnim/yices-1.0.14
+YICES_DIR=/home/sudeep/yices
 
 TARGET=`expr $1 : '\(.*\)\.c'`
 

@@ -96,11 +96,11 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void BinaryExpr::Serialize(string* s) const {
-  // s->append((char*)binary_op_, sizeof(binary_op_t));
-  s->push_back('(');
+  SymbolicExpr::Serialize(s,BINARY_NODE_TYPE);
+  //s->push_back(BINARY_NODE_TYPE);
+  s->append(__BINARY_OP_STR[binary_op_], __SIZEOF_BINARY_OP);
   left_->Serialize(s);
   right_->Serialize(s);
-  s->push_back(')');
 }
 
 bool BinaryExpr::Equals(const SymbolicExpr &e) const {

@@ -59,9 +59,13 @@ class SymbolicExpr {
   // Convert to Yices.
   virtual yices_expr BitBlast(yices_context ctx) const;
 
-  // Serialization.
-  static SymbolicExpr* Parse(istream& s) { return NULL; }
-  virtual void Serialize(string* s) const { }
+  // Parsing
+  static SymbolicExpr* Parse(istream& s);
+
+  //Serialization: Format
+  // Value | size | Node type | operator/var | children
+  virtual void Serialize(string* s) const;
+  void Serialize(string* s, char c) const;
 
   // Factory methods for constructing symbolic expressions.
   static SymbolicExpr* NewConcreteExpr(type_t ty, value_t val);

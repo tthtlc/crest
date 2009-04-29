@@ -22,7 +22,7 @@ compare_op_t NegateCompareOp(compare_op_t op) {
 const char* kCompareOpStr[] = {
   "==", "!=",
   ">", "<", ">=", "<=",
-  ">", "<", ">=", "<=",
+  ">", "<", ">=", "<="
 };
 
 const char* kBinaryOpStr[] = {
@@ -36,6 +36,24 @@ const char* kBinaryOpStr[] = {
 
 const char* kUnaryOpStr[] = {
   "-", "!", "~", "cast"
+};
+
+const char* __COMPARE_OP_STR[] = {
+  "0", "1",
+  "2", "3", "4", "5",
+  "6", "7", "8", "9"
+};
+const char* __BINARY_OP_STR[] = {
+  "00", "01", "02",
+  "03", "04",
+  "05", "06",
+  "07", "08", "09",
+  "10", "11", "12",
+  "13", "14", "15"
+};
+
+const char* __UNARY_OP_STR[] = {
+  "0", "1", "2", "3"
 };
 
 const char* kMinValueStr[] = {
