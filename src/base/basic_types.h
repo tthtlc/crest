@@ -11,18 +11,6 @@
 #ifndef BASE_BASIC_TYPES_H__
 #define BASE_BASIC_TYPES_H__
 
-#ifndef __SIZEOF_COMPARE_OP
-#define __SIZEOF_COMPARE_OP sizeof(char)
-#endif
-
-#ifndef __SIZEOF_BINARY_OP
-#define __SIZEOF_BINARY_OP 2*sizeof(char)
-#endif
-
-#ifndef __SIZEOF_UNARY_OP
-#define __SIZEOF_UNARY_OP sizeof(char)
-#endif
-
 #include <cstddef>
 
 namespace crest {
@@ -65,13 +53,6 @@ extern const char* kCompareOpStr[];
 extern const char* kBinaryOpStr[];
 extern const char* kUnaryOpStr[];
 
-// Serializing operators!
-// The strings representing Unary/Compare operators are 1 char long, and binary are 2 chars long
-// Again, the number of elements exactly match those defined in the enums.
-extern const char* __UNARY_OP_STR[];
-extern const char* __BINARY_OP_STR[];
-extern const char* __COMPARE_OP_STR[];
-
 // C numeric types.
 
 namespace types {
@@ -95,13 +76,6 @@ extern const value_t kMaxValue[];
 
 extern const size_t kSizeOfType[];
 
-//Serializing Node types
-static const char BASIC_NODE_TYPE='0';
-static const char COMPARE_NODE_TYPE='1';
-static const char BINARY_NODE_TYPE='2';
-static const char UNARY_NODE_TYPE='3';
-static const char DEREF_NODE_TYPE='4';
-static const char CONST_NODE_TYPE='5';
 }  // namespace crest
 
 #endif  // BASE_BASIC_TYPES_H__

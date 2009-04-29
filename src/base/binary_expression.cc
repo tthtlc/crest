@@ -96,9 +96,8 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
 }
 
 void BinaryExpr::Serialize(string* s) const {
-  SymbolicExpr::Serialize(s,BINARY_NODE_TYPE);
-  //s->push_back(BINARY_NODE_TYPE);
-  s->append(__BINARY_OP_STR[binary_op_], __SIZEOF_BINARY_OP);
+  SymbolicExpr::Serialize(s,kBinaryNodeTag);
+  s->push_back(binary_op_);
   left_->Serialize(s);
   right_->Serialize(s);
 }

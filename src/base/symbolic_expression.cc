@@ -106,9 +106,6 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
   value_t* val = new value_t(sizeof(value_t));
   size_t* siz = new size_t(sizeof(size_t));
   var_t* var = new var_t(sizeof(var_t));
-  char *un_op = new char[__SIZEOF_UNARY_OP];
-  char *bin_op = new char[__SIZEOF_BINARY_OP];
-  char *cmp_op = new char[__SIZEOF_COMPARE_OP];
   SymbolicExpr *left = NULL, *right = NULL, *child=NULL;
   compare_op_t cmp_op_ = ops::EQ;
   binary_op_t bin_op_ = ops::ADD;
@@ -122,39 +119,36 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
   char type_ = s.get();
   switch(type_) {
 
-  case BASIC_NODE_TYPE:
+  case kBasicNodeTag:
 	  s.read((char*)var, sizeof(var_t));
 	  if(s.fail()) return NULL;
 	  return new BasicExpr(*siz, *val, *var);
 
-  case COMPARE_NODE_TYPE:
-	  s.read(cmp_op, __SIZEOF_COMPARE_OP);
+  case kCompareNodeTag:
+	  cmp_op_ = (compare_op_t)s.get();
 	  if(s.fail()) return NULL;
-	  cmp_op_ = (compare_op_t)atoi(cmp_op);
 	  left = Parse(s);
 	  right = Parse(s);
 	  return new CompareExpr(cmp_op_, left, right, *siz, *val);
 
-  case BINARY_NODE_TYPE:
-	  s.read(bin_op, __SIZEOF_BINARY_OP);
+  case kBinaryNodeTag:
+	  bin_op_ = (binary_op_t)s.get();
 	  if(s.fail()) return NULL;
-	  bin_op_ = (binary_op_t)atoi(bin_op);
 	  left = Parse(s);
 	  right = Parse(s);
 	  return new BinaryExpr(bin_op_, left, right, *siz, *val);
 
-  case UNARY_NODE_TYPE:
-	  s.read(un_op, __SIZEOF_UNARY_OP);
+  case kUnaryNodeTag:
+	  un_op_ = (unary_op_t)s.get();
 	  if(s.fail()) return NULL;
-	  un_op_ = (unary_op_t)atoi(un_op);
 	  child = Parse(s);
 	  return new UnaryExpr(un_op_, child, *siz, *val);
 
-  case DEREF_NODE_TYPE:
+  case kDerefNodeTag:
 	  //TODO
 	  return NULL;
 
-  case CONST_NODE_TYPE:
+  case kConstNodeTag:
 	  return new SymbolicExpr(*siz, *val);
 
   default:
@@ -164,7 +158,7 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
 }
 
 void SymbolicExpr::Serialize(string *s) const {
-	SymbolicExpr::Serialize(s, CONST_NODE_TYPE);
+	SymbolicExpr::Serialize(s, kConstNodeTag);
 }
 
 void SymbolicExpr::Serialize(string *s, char c) const {
