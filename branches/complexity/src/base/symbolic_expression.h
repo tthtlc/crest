@@ -122,6 +122,7 @@ class SymbolicExpr {
 	  kConstNodeTag = 5
 
   };
+
  private:
   const value_t value_;
   const size_t size_;

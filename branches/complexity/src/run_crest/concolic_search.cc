@@ -242,7 +242,7 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
 	  length_longest_path_ = total_branches;
 	  num_longest_path_ = 1;
 	  longest_paths_.clear();
-	  longest_paths_.push_back(path);
+	  longest_paths_.push_back(&path);
   }
   else if(total_branches == length_longest_path_) {
 	  //Search in the longest path
@@ -257,7 +257,7 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
 	  }*/
 	  if(!flag) {
 		num_longest_path_++;
-		longest_paths_.push_back(path);
+		longest_paths_.push_back(&path);
 	  }
   }
 

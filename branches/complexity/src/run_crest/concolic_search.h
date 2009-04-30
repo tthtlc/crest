@@ -53,7 +53,7 @@ class Search {
   // NEW: Tracking the longest paths taken so far
   unsigned int length_longest_path_;
   unsigned int num_longest_path_;
-  vector<SymbolicPath> longest_paths_;
+  vector<const SymbolicPath*> longest_paths_;
   //END NEW
 
   vector<bool> reached_;
