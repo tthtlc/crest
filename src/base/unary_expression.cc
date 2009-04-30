@@ -47,6 +47,8 @@ void UnaryExpr::AppendToString(string *s) const {
 
 yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
   yices_expr e = child_->BitBlast(ctx);
+  size_t child_size = 0;
+  size_t curr_size = 0;
 
   switch (unary_op_) {
   case ops::NEGATE:
@@ -59,8 +61,18 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
     return yices_mk_bv_not(ctx, e);
 
   case ops::CAST:
-	fprintf(stderr, "Cast not handled yet!...exiting\n");
-	exit(1);
+	child_size = 8*child_->size();
+	curr_size = 8*size();
+
+	if(curr_size < child_size) { // Downcast: Extract the lowest order bits
+		return yices_mk_bv_extract(ctx, curr_size - 1, 0, e);
+	}
+	else if(curr_size > child_size) { //Upcast: sign-extend
+		return yices_mk_bv_sign_extend(ctx, e, curr_size - child_size);
+	}
+	else {
+		return e;
+	}
 
   default:
     fprintf(stderr, "Unknown unary operator: %d\n", unary_op_);
