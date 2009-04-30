@@ -44,7 +44,7 @@ class SymbolicInterpreter {
 
   void ApplyUnaryOp(id_t id, unary_op_t op, type_t ty, value_t value);
   void ApplyBinaryOp(id_t id, binary_op_t op, type_t ty, value_t value);
-  void ApplyBinPtrOp(id_t id, binary_op_t op, size_t size, value_t value);
+  void ApplyBinPtrOp(id_t id, pointer_op_t op, size_t size, value_t value);
   void ApplyCompareOp(id_t id, compare_op_t op, type_t ty, value_t value);
 
   void Call(id_t id, function_id_t fid);

@@ -43,7 +43,9 @@ static const int kOpTable[] =
     // unhandled binary operators (note: there aren't any)
     ops::CONCRETE,
     // unary operators
-    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::CAST
+    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::CAST,
+    // pointer operators
+    ops::ADD_PI, ops::SUBTRACT_PI, ops::SUBTRACT_PP,
   };
 
 
@@ -254,7 +256,7 @@ void __CrestPtrApply2(__CREST_ID id, __CREST_OP op,
   if (pre_symbolic)
     return;
 
-  SI->ApplyBinPtrOp(id, static_cast<binary_op_t>(kOpTable[op]), size, val);
+  SI->ApplyBinPtrOp(id, static_cast<pointer_op_t>(kOpTable[op]), size, val);
 }
 
 void __CrestBranch(__CREST_ID id, __CREST_BRANCH_ID bid, __CREST_BOOL b) {

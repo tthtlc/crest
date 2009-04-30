@@ -343,8 +343,7 @@ class crestInstrumentVisitor f =
     let c =
       match (signed, op) with
         (* arithmetic ops *)
-        | _, PlusA       ->  0  | _, PlusPI      ->  0  | _, IndexPI    ->  0
-        | _, MinusA      ->  1  | _, Mult        ->  2
+        | _, PlusA       ->  0  | _, MinusA      ->  1  | _, Mult       ->  2
         | false, Div     ->  3  | true, Div      ->  4
         | false, Mod     ->  5  | true, Mod      ->  6
         (* bitwise ops *)
@@ -356,6 +355,9 @@ class crestInstrumentVisitor f =
         | false, Le      -> 17  | true, Le       -> 18
         | false, Lt      -> 19  | true, Lt       -> 20
         | false, Ge      -> 21  | true, Ge       -> 22
+        (* pointer ops *)
+        | _, PlusPI      ->  28 | _, IndexPI    ->  28
+        | _, MinusPI     ->  29 | _, MinusPP    ->  30
         (* all that's left are logical ops, which we should never encounter *)
         | _ -> invalid_arg "binaryOp"
     in

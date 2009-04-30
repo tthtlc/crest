@@ -39,12 +39,15 @@ enum binary_op_t { ADD = 0,          SUBTRACT = 1,    MULTIPLY = 2,
                    BITWISE_AND = 10,  BITWISE_OR = 11,  BITWISE_XOR = 12,
                    CONCAT = 13,       EXTRACT = 14,     CONCRETE = 15};
 
+enum pointer_op_t { ADD_PI = 0, SUBTRACT_PI = 1, SUBTRACT_PP = 2 };
+
 enum unary_op_t { NEGATE = 0, LOGICAL_NOT = 1, BITWISE_NOT = 2, CAST = 3};
 
 }  // namespace ops
 
 using ops::compare_op_t;
 using ops::binary_op_t;
+using ops::pointer_op_t;
 using ops::unary_op_t;
 
 compare_op_t NegateCompareOp(compare_op_t op);

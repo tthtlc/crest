@@ -175,6 +175,10 @@ enum {
   __CREST_L_NOT      = 26,
   /* cast */
   __CREST_CAST       = 27,
+  /* pointer ops */
+  __CREST_ADD_PI     = 28,
+  __CREST_SUB_PI     = 29,
+  __CREST_SUB_PP     = 30,
 };
 
 enum {

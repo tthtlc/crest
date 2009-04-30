@@ -224,7 +224,7 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
 }
 
 
-void SymbolicInterpreter::ApplyBinPtrOp(id_t id, binary_op_t op,
+void SymbolicInterpreter::ApplyBinPtrOp(id_t id, pointer_op_t op,
                                         size_t size, value_t value) {
   // TODO: Implement this.
 }
