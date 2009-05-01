@@ -359,7 +359,7 @@ class crestInstrumentVisitor f =
         | _, PlusPI      ->  28 | _, IndexPI    ->  28
         | _, MinusPI     ->  29 | _, MinusPP    ->  30
         (* all that's left are logical ops, which we should never encounter *)
-        (* | _ -> invalid_arg "binaryOp" *)
+        | _ -> invalid_arg "binaryOp"
     in
       integer c
   in
