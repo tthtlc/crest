@@ -78,15 +78,15 @@ void SymbolicObject::Serialize(string* s) const {
 }
 
 SymbolicObject* SymbolicObject::Parse(istream& s) {
-  addr_t *st = new addr_t(sizeof(addr_t));
-  size_t *si = new size_t(sizeof(size_t));
+  addr_t st;
+  size_t si;
 
-  s.read((char*)st, sizeof(addr_t));
+  s.read((char*)&st, sizeof(addr_t));
   if(s.fail()) return NULL;
-  s.read((char*)si, sizeof(size_t));
+  s.read((char*)&si, sizeof(size_t));
   if(s.fail()) return NULL;
 
-  return new SymbolicObject(*st, *si);
+  return new SymbolicObject(st, si);
 }
 
 yices_expr SymbolicObject::BitBlast(yices_context ctx, addr_t concrete_address) const {

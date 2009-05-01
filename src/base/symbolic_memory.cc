@@ -139,14 +139,12 @@ void SymbolicMemory::concretize(addr_t addr, size_t n) {
 
 void SymbolicMemory::Serialize(string *s) const {
   //Format is :mem_size() | i | mem_[i]
-  unsigned int mem_size = sizeof(size_t);
-  char buff[8*mem_size];
-  sprintf(buff, "%u",mem_.size());
-  s->append(buff, mem_size);
+  size_t mem_size = mem_.size();
+  s->append((char*)&mem_size, sizeof(size_t));
 
   //Now write the memory contents
   for(hash_map<addr_t, SymbolicExpr*>::const_iterator it = mem_.begin(); it != mem_.end(); it++) {
-	  s->append((char*)(it->first), sizeof(addr_t));
+	  s->append((char*)&(it->first), sizeof(addr_t));
 	  (it->second)->Serialize(s);
   }
 
