@@ -8,6 +8,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See LICENSE
 // for details.
 
+#include<assert.h>
 #include "base/symbolic_object.h"
 
 #include "base/symbolic_expression.h"
@@ -68,4 +69,29 @@ void SymbolicObject::write(SymbolicExpr* sym_addr, addr_t addr,
   }
 }
 
+void SymbolicObject::Serialize(string* s) const {
+  //Format is: start_ | size_ | mem_
+  //Not keeping tracks of symbolic writes
+  s->append((char*)&start_, sizeof(addr_t));
+  s->append((char*)&size_, sizeof(size_t));
+  //mem_.Serialize(s);
+}
+
+SymbolicObject* SymbolicObject::Parse(istream& s) {
+  addr_t *st = new addr_t(sizeof(addr_t));
+  size_t *si = new size_t(sizeof(size_t));
+
+  s.read((char*)st, sizeof(addr_t));
+  if(s.fail()) return NULL;
+  s.read((char*)si, sizeof(size_t));
+  if(s.fail()) return NULL;
+
+  return new SymbolicObject(*st, *si);
+}
+
+yices_expr SymbolicObject::BitBlast(yices_context ctx, addr_t concrete_address) const {
+	assert(start_ <= concrete_address && start_+size_ >= concrete_address);
+	SymbolicMemory* m = new SymbolicMemory(mem_);
+	return m->BitBlast(ctx, concrete_address - start_);
+}
 }  // namespace crest

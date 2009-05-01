@@ -111,6 +111,9 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
   binary_op_t bin_op_ = ops::ADD;
   unary_op_t un_op_ = ops::NEGATE;
 
+  SymbolicObject *obj = NULL;
+  SymbolicExpr *addr = NULL;
+
   s.read((char *)val, sizeof(value_t));
 	  if(s.fail()) return NULL;
   s.read((char *)siz, sizeof(size_t));
@@ -145,9 +148,15 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
 	  return new UnaryExpr(un_op_, child, *siz, *val);
 
   case kDerefNodeTag:
-	  //TODO
-	  return NULL;
-
+	  obj = SymbolicObject::Parse(s);
+	  if(obj == NULL) { // That means read has failed in object::Parse
+		  return NULL;
+	  }
+	  addr = SymbolicExpr::Parse(s);
+	  if(addr == NULL) { // Read has failed in expr::Parse
+		  return NULL;
+	  }
+	  return new DerefExpr(addr, obj, *siz, *val);
   case kConstNodeTag:
 	  return new SymbolicExpr(*siz, *val);
 

@@ -60,7 +60,7 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
   case ops::BITWISE_NOT:
     return yices_mk_bv_not(ctx, e);
 
-  case ops::CAST:
+  case ops::SIGNED_CAST:
 	child_size = 8*child_->size();
 	curr_size = 8*size();
 
@@ -69,6 +69,21 @@ yices_expr UnaryExpr::BitBlast(yices_context ctx) const {
 	}
 	else if(curr_size > child_size) { //Upcast: sign-extend
 		return yices_mk_bv_sign_extend(ctx, e, curr_size - child_size);
+	}
+	else {
+		return e;
+	}
+
+  case ops::UNSIGNED_CAST:
+	child_size = 8*child_->size();
+	curr_size = 8*size();
+
+	if(curr_size < child_size) { // Downcast: Extract the lowest order bits
+		return yices_mk_bv_extract(ctx, curr_size - 1, 0, e);
+	}
+	else if(curr_size > child_size) { //Upcast: In this case, append the child with zeroes
+		yices_expr zero = yices_mk_bv_constant(ctx, curr_size - child_size, 0);
+		return yices_mk_bv_concat(ctx, zero, e);
 	}
 	else {
 		return e;
