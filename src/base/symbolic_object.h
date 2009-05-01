@@ -37,6 +37,12 @@ class SymbolicObject {
 
   bool Equals(const SymbolicObject& o) const { return false; }
 
+  void Serialize(string *s) const;
+  //Parsing
+  static SymbolicObject* Parse(istream &s);
+
+  yices_expr BitBlast(yices_context ctx, addr_t concrete_address) const;
+
   addr_t start() const { return start_; }
   addr_t end() const { return start_ + size_; }
   size_t size() const { return size_; }

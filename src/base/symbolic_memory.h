@@ -12,8 +12,11 @@
 #define BASE_SYMBOLIC_MEMORY_H__
 
 #include <ext/hash_map>
+#include <yices_c.h>
 
 #include "base/basic_types.h"
+
+using std::string;
 
 namespace crest {
 
@@ -43,6 +46,9 @@ class SymbolicMemory {
 
   void concretize(addr_t addr, size_t n);
 
+  void Serialize(string *s) const;
+
+  yices_expr BitBlast(yices_context ctx, addr_t addr);
   // For debugging.
   void Dump() const;
 

@@ -43,7 +43,7 @@ static const int kOpTable[] =
     // unhandled binary operators (note: there aren't any)
     ops::CONCRETE,
     // unary operators
-    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::CAST,
+    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::UNSIGNED_CAST, ops::SIGNED_CAST,
     // pointer operators
     ops::ADD_PI, ops::SUBTRACT_PI, ops::SUBTRACT_PP,
   };
@@ -220,7 +220,7 @@ void __CrestClearStack(__CREST_ID id) {
 
 void __CrestApply1(__CREST_ID id, __CREST_OP op,
                    __CREST_TYPE ty, __CREST_VALUE val) {
-  assert((op >= __CREST_NEGATE) && (op <= __CREST_CAST));
+  assert((op >= __CREST_NEGATE) && (op <= __CREST_SIGNED_CAST));
 
   if (!pre_symbolic)
     SI->ApplyUnaryOp(id,

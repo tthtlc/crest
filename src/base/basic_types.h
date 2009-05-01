@@ -41,7 +41,7 @@ enum binary_op_t { ADD = 0,          SUBTRACT = 1,    MULTIPLY = 2,
 
 enum pointer_op_t { ADD_PI = 0, SUBTRACT_PI = 1, SUBTRACT_PP = 2 };
 
-enum unary_op_t { NEGATE = 0, LOGICAL_NOT = 1, BITWISE_NOT = 2, CAST = 3};
+enum unary_op_t { NEGATE = 0, LOGICAL_NOT = 1, BITWISE_NOT = 2, UNSIGNED_CAST = 3, SIGNED_CAST = 4};
 
 }  // namespace ops
 

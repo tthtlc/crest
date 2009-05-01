@@ -62,12 +62,15 @@ void DerefExpr::AppendToString(string *s) const {
 }
 
 void DerefExpr::Serialize(string *s) const {
-  //TODO
+  SymbolicExpr::Serialize(s, kDerefNodeTag);
+  object_->Serialize(s);
+  addr_->Serialize(s);
 }
 
 yices_expr DerefExpr::BitBlast(yices_context ctx) const {
-  assert(false);
-  // TODO
+  //Ignore symbolic address for now. Use the concrete value of the address and look at the expression in the memory
+  addr_t concrete_address = (addr_t)addr_->value();
+  return object_->BitBlast(ctx, concrete_address);
 }
 
 bool DerefExpr::Equals(const SymbolicExpr& e) const {
