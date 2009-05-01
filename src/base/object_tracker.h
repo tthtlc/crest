@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Jacob Burnim (jburnim@cs.berkeley.edu)
+// Copyright (c) 2009, Jacob Burnim (jburnim@cs.berkeley.edu)
 //
 // This file is part of CREST, which is distributed under the revised
 // BSD license.  A copy of this license can be found in the file LICENSE.
@@ -11,6 +11,8 @@
 #ifndef BASE_OBJECT_TRACKER_H__
 #define BASE_OBJECT_TRACKER_H__
 
+#include <map>
+
 #include "base/basic_types.h"
 
 namespace crest {
@@ -20,12 +22,15 @@ class SymbolicObject;
 class ObjectTracker {
  public:
   ObjectTracker() { }
+  ~ObjectTracker();
 
-  SymbolicObject* find(addr_t addr) const {
-    return NULL;
-  }
+  void add(addr_t addr, size_t size);
+  SymbolicObject* find(addr_t addr) const;
+
+  // TODO: Method for removing/de-allocating objects.
 
  private:
+  std::map<addr_t,SymbolicObject*> objs_;
 };
 
 }  // namespace crest
