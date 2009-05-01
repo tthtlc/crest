@@ -12,9 +12,9 @@ BASE_LIBS = base/basic_types.o base/symbolic_execution.o \
 	base/symbolic_memory.o base/symbolic_object.o \
 	base/basic_expression.o base/unary_expression.o \
 	base/binary_expression.o base/compare_expression.o \
-	base/deref_expression.o  \
-	base/symbolic_expression.o base/yices_solver.o 
-            
+	base/deref_expression.o base/object_tracker.o \
+	base/symbolic_expression.o base/yices_solver.o
+
 
 all: libcrest/libcrest.a run_crest/run_crest \
      process_cfg/process_cfg tools/print_execution \
