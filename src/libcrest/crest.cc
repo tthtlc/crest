@@ -183,7 +183,7 @@ void __CrestAtExit() {
 //
 
 void __CrestRegGlobal(__CREST_ID id, __CREST_ADDR addr, size_t size) {
-  // TODO: Record as allocation.
+  SI->Alloc(id, addr, size);
 }
 
 

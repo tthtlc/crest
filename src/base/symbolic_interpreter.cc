@@ -304,6 +304,11 @@ void SymbolicInterpreter::Branch(id_t id, branch_id_t bid, bool pred_value) {
 }
 
 
+void SymbolicInterpreter::Alloc(id_t id, addr_t addr, size_t size) {
+  obj_tracker_.add(addr, size);
+}
+
+
 value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
   assert(ty != types::STRUCT);
   ex_.mutable_vars()->insert(make_pair(num_inputs_, ty));
