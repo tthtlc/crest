@@ -70,6 +70,14 @@ SymbolicExpr* SymbolicExpr::NewBinaryExpr(type_t ty, value_t val,
   return new BinaryExpr(op, e1, e2, kSizeOfType[ty], val);
 }
 
+SymbolicExpr* SymbolicExpr::NewBinaryExpr(type_t ty, value_t val,
+                                          ops::binary_op_t op,
+                                          SymbolicExpr* e1, value_t e2) {
+  // TODO: Should special case for multiplying by a power of 2?
+  return new BinaryExpr(op, e1, NewConcreteExpr(ty, e2), kSizeOfType[ty], val);
+}
+
+
 SymbolicExpr* SymbolicExpr::NewCompareExpr(type_t ty, value_t val,
                                            ops::compare_op_t op,
                                            SymbolicExpr* e1, SymbolicExpr* e2) {

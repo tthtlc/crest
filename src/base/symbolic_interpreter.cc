@@ -224,10 +224,69 @@ void SymbolicInterpreter::ApplyBinaryOp(id_t id, binary_op_t op,
 }
 
 
+void SymbolicInterpreter::ScaleUpBy(bool isSigned, size_t size) {
+  assert(stack_.size() >= 1);
+  StackElem& b = stack_.back();
+
+  unary_op_t cast = isSigned ? ops::SIGNED_CAST : ops::UNSIGNED_CAST;
+  type_t ty = isSigned ? types::LONG : types::U_LONG;
+
+  // If necessary, adjust the symbolic value on the stack.
+  if (b.expr) {
+    // Cast b to be the same size as a signed/unsigned long.
+    if (b.expr->size() != kSizeOfType[ty]) {
+      b.expr = SymbolicExpr::NewUnaryExpr(ty, b.concrete, cast, b.expr);
+    }
+
+    // Multiply b by size
+    b.expr = SymbolicExpr::NewBinaryExpr(ty, b.concrete * size,
+                                         ops::MULTIPLY, b.expr, size);
+  }
+
+  // Adjust the concrete value/type on the stack.
+  b.concrete *= size;
+  b.ty = ty;
+}
+
+
 void SymbolicInterpreter::ApplyBinPtrOp(id_t id, pointer_op_t op,
                                         size_t size, value_t value) {
-  // TODO: Implement this.
+  IFDEBUG(fprintf(stderr, "apply2ptr %d(%zu) %lld\n", op, size, value));
+  assert(stack_.size() >= 2);
+  StackElem& a = *(stack_.rbegin()+1);
+  StackElem& b = stack_.back();
+
+  type_t ty = (op == ops::SUBTRACT_PP) ? types::LONG : types::U_LONG;
+
+  if (a.expr || b.expr) {
+    // If operation is a pointer-int op, then scale b.
+    if ((op != ops::SUBTRACT_PP) && (size > 1)) {
+      bool isSigned = ((op == ops::S_ADD_PI) || (op == ops::S_SUBTRACT_PI));
+      ScaleUpBy(isSigned, size);
+    }
+
+    // Apply the corresponding binary operation.
+    if ((op == ops::ADD_PI) || (op == ops::S_ADD_PI)) {
+      ApplyBinaryOp(-1, ops::ADD, ty,
+                    static_cast<unsigned long>(a.concrete + b.concrete));
+    } else {
+      ApplyBinaryOp(-1, ops::SUBTRACT, ty,
+                    static_cast<unsigned long>(a.concrete - b.concrete));
+    }
+
+    // If the operation is pointer-pointer subtraction, scale the result.
+    if (op == ops::SUBTRACT_PP) {
+      a.expr = SymbolicExpr::NewBinaryExpr(ty, value, ops::S_DIV, a.expr, size);
+    }
+  }
+
+  a.concrete = value;
+  a.ty = ty;
+
+  // Stack has already been popped.
+  IFDEBUG(DumpMemory());
 }
+
 
 void SymbolicInterpreter::ApplyCompareOp(id_t id, compare_op_t op,
                                          type_t ty, value_t value) {
