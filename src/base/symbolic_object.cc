@@ -19,11 +19,11 @@ using namespace std;
 namespace crest {
 
 SymbolicObject::SymbolicObject(addr_t start, size_t size)
-  : start_(start), size_(size), writes_(4) { }
+  : start_(start), size_(size), writes_() { }
 
 SymbolicObject::SymbolicObject(const SymbolicObject &obj)
   : start_(obj.start_), size_(obj.size_),
-    mem_(obj.mem_), writes_(obj.writes_.size())
+    mem_(obj.mem_), writes_(obj.writes_)
 {
   for (vector<Write>::iterator it = writes_.begin(); it != writes_.end(); ++it) {
     it->first = it->first->Clone();
