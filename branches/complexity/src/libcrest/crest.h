@@ -174,13 +174,14 @@ enum {
   __CREST_NOT        = 25,
   __CREST_L_NOT      = 26,
   /* cast */
-  __CREST_UNSIGNED_CAST     = 27,
-  __CREST_SIGNED_CAST		= 28,
-
+  __CREST_CAST       = 27,
+  __CREST_S_CAST     = 28,
   /* pointer ops */
   __CREST_ADD_PI     = 29,
-  __CREST_SUB_PI     = 30,
-  __CREST_SUB_PP     = 31,
+  __CREST_S_ADD_PI   = 30,
+  __CREST_SUB_PI     = 31,
+  __CREST_S_SUB_PI   = 32,
+  __CREST_SUB_PP     = 33,
 };
 
 enum {
@@ -204,23 +205,23 @@ enum {
  * (Could also clone these for each type: uint8, int8, ..., uint64, int64.)
  */
 EXTERN void __CrestInit(__CREST_ID) __SKIP;
-				    EXTERN void __CrestRegGlobal(__CREST_ID, __CREST_ADDR, size_t) __SKIP;
+EXTERN void __CrestRegGlobal(__CREST_ID, __CREST_ADDR, size_t) __SKIP;
 EXTERN void __CrestLoad(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
-									       EXTERN void __CrestDeref(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
-																			       EXTERN void __CrestStore(__CREST_ID, __CREST_ADDR) __SKIP;
-																										  EXTERN void __CrestWrite(__CREST_ID, __CREST_ADDR) __SKIP;
-																																     EXTERN void __CrestClearStack(__CREST_ID) __SKIP;
-																																					       EXTERN void __CrestApply1(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
-																																															      EXTERN void __CrestApply2(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
-																																																									     EXTERN void __CrestPtrApply2(__CREST_ID, __CREST_OP, size_t, __CREST_VALUE) __SKIP;
+EXTERN void __CrestDeref(__CREST_ID, __CREST_ADDR, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestStore(__CREST_ID, __CREST_ADDR) __SKIP;
+EXTERN void __CrestWrite(__CREST_ID, __CREST_ADDR) __SKIP;
+EXTERN void __CrestClearStack(__CREST_ID) __SKIP;
+EXTERN void __CrestApply1(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestApply2(__CREST_ID, __CREST_OP, __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestPtrApply2(__CREST_ID, __CREST_OP, size_t, __CREST_VALUE) __SKIP;
 EXTERN void __CrestBranch(__CREST_ID, __CREST_BRANCH_ID, __CREST_BOOL) __SKIP;
-								       EXTERN void __CrestCall(__CREST_ID, __CREST_FUNCTION_ID) __SKIP;
-																EXTERN void __CrestReturn(__CREST_ID) __SKIP;
-																				      EXTERN void __CrestHandleReturn(__CREST_ID,  __CREST_TYPE, __CREST_VALUE) __SKIP;
+EXTERN void __CrestCall(__CREST_ID, __CREST_FUNCTION_ID) __SKIP;
+EXTERN void __CrestReturn(__CREST_ID) __SKIP;
+EXTERN void __CrestHandleReturn(__CREST_ID,  __CREST_TYPE, __CREST_VALUE) __SKIP;
 
-																														/*
-																														 * Functions (macros) for obtaining symbolic inputs.
-																														 */
+/*
+ * Functions (macros) for obtaining symbolic inputs.
+ */
 #define CREST_unsigned_char(x) __CrestUChar(&x)
 #define CREST_unsigned_short(x) __CrestUShort(&x)
 #define CREST_unsigned_int(x) __CrestUInt(&x)
@@ -228,7 +229,7 @@ EXTERN void __CrestBranch(__CREST_ID, __CREST_BRANCH_ID, __CREST_BOOL) __SKIP;
 #define CREST_short(x) __CrestShort(&x)
 #define CREST_int(x) __CrestInt(&x)
 
-																														EXTERN void __CrestUChar(unsigned char* x) __SKIP;
+EXTERN void __CrestUChar(unsigned char* x) __SKIP;
 EXTERN void __CrestUShort(unsigned short* x) __SKIP;
 EXTERN void __CrestUInt(unsigned int* x) __SKIP;
 EXTERN void __CrestChar(char* x) __SKIP;

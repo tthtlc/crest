@@ -337,27 +337,34 @@ class crestInstrumentVisitor f =
       integer c
   in
 
-  let castOp = integer 27 in
+  let castOp signed =
+    if signed then
+      integer 28
+    else
+      integer 27
+  in
 
   let binaryOp (signed, op) =
     let c =
       match (signed, op) with
         (* arithmetic ops *)
-        | _, PlusA       ->  0  | _, MinusA      ->  1  | _, Mult       ->  2
-        | false, Div     ->  3  | true, Div      ->  4
-        | false, Mod     ->  5  | true, Mod      ->  6
+        | _, PlusA        ->  0  | _, MinusA      ->  1  | _, Mult       ->  2
+        | false, Div      ->  3  | true, Div      ->  4
+        | false, Mod      ->  5  | true, Mod      ->  6
         (* bitwise ops *)
-        | _, Shiftlt     ->  7  | false, Shiftrt ->  8  | true, Shiftrt ->  9
-        | _, BAnd        -> 10  | _, BOr         -> 11  | _, BXor       -> 12
+        | _, Shiftlt      ->  7  | false, Shiftrt ->  8  | true, Shiftrt ->  9
+        | _, BAnd         -> 10  | _, BOr         -> 11  | _, BXor       -> 12
         (* comparison ops *)
-        | _, Eq          -> 13  | _, Ne          -> 14
-        | false, Gt      -> 15  | true, Gt       -> 16
-        | false, Le      -> 17  | true, Le       -> 18
-        | false, Lt      -> 19  | true, Lt       -> 20
-        | false, Ge      -> 21  | true, Ge       -> 22
+        | _, Eq           -> 13  | _, Ne          -> 14
+        | false, Gt       -> 15  | true, Gt       -> 16
+        | false, Le       -> 17  | true, Le       -> 18
+        | false, Lt       -> 19  | true, Lt       -> 20
+        | false, Ge       -> 21  | true, Ge       -> 22
         (* pointer ops *)
-        | _, PlusPI      ->  28 | _, IndexPI    ->  28
-        | _, MinusPI     ->  29 | _, MinusPP    ->  30
+        | false, PlusPI  ->  28  | true, PlusPI   -> 29
+        | false, IndexPI ->  30  | true, IndexPI  -> 31
+        | false, MinusPI ->  32  | true, MinusPI  -> 33
+        | _, MinusPP    ->   34
         (* all that's left are logical ops, which we should never encounter *)
         | _ -> invalid_arg "binaryOp"
     in
@@ -415,10 +422,10 @@ class crestInstrumentVisitor f =
   let mkStore addr        = mkInstCall storeFunc [toAddr addr] in
   let mkWrite addr        = mkInstCall writeFunc [toAddr addr] in
   let mkClearStack ()     = mkInstCall clearStackFunc [] in
-  let mkCast ty v         = mkInstCall apply1Func [castOp; toType ty; toValue v] in
+  let mkCast signed ty v  = mkInstCall apply1Func [castOp signed; toType ty; toValue v] in
   let mkApply1 op ty v    = mkInstCall apply1Func [unaryOp op; toType ty; toValue v] in
   let mkApply2 op ty v    = mkInstCall apply2Func [binaryOp op; toType ty; toValue v] in
-  let mkPtrApply2 op sz v = mkInstCall ptrApply2Func [binaryOp (false, op); sz; toValue v] in
+  let mkPtrApply2 op sz v = mkInstCall ptrApply2Func [binaryOp op; sz; toValue v] in
   let mkBranch bid b      = mkInstCall branchFunc [integer bid; integer b] in
   let mkCall fid          = mkInstCall callFunc [integer fid] in
   let mkReturn ()         = mkInstCall returnFunc [] in
@@ -466,15 +473,18 @@ class crestInstrumentVisitor f =
                | (Var v, _) -> [mkLoad noAddr (typeOf (addressOf lv)) (addressOf lv)]
                | (Mem e, _) -> instrumentExpr e)
         | Index (e, _) ->
-            (instrumentLvalueAddr lv')
-            @ (instrumentExpr e)
-            @ [mkPtrApply2 IndexPI (sizeOf (typeOfLval lv)) (addressOf lv)]
+            let signed = isSignedType (typeOf e) in
+              (instrumentLvalueAddr lv')
+              @ (instrumentExpr e)
+              @ [mkPtrApply2 (signed, IndexPI)
+                             (sizeOf (typeOfLval lv))
+                             (addressOf lv)]
 
         | Field (f, _) ->
             let fieldOff = cExp "&%l:lv1 - &%l:lv2" [("lv1", Fl lv); ("lv2", Fl lv')] in
               (instrumentLvalueAddr lv')
               @ [mkLoad noAddr !typeOfSizeOf fieldOff ;
-                 mkPtrApply2 IndexPI one (addressOf lv)]
+                 mkPtrApply2 (false, IndexPI) one (addressOf lv)]
 
   (*
    * Instrument an expression.
@@ -500,9 +510,10 @@ class crestInstrumentVisitor f =
             (instrumentExpr e') @ [mkApply1 op ty e]
 
         | BinOp (op, e1, e2, _) when isPointerOp op ->
+            let signed = isSignedType (typeOf e2) in
             let TPtr (baseTy, _) = unrollType (typeOf e1) in
               (instrumentExpr e1) @ (instrumentExpr e2)
-              @ [mkPtrApply2 op (sizeOf baseTy) e]
+              @ [mkPtrApply2 (signed, op) (sizeOf baseTy) e]
 
         | BinOp (op, e1, e2, _) ->
             (* Should skip this if we don't currently handle 'op'? *)
@@ -512,7 +523,8 @@ class crestInstrumentVisitor f =
               @ [mkApply2 (signed, op) ty e]
 
         | CastE (_, e') ->
-            (instrumentExpr e') @ [mkCast ty e]
+            let signed = isSignedType (typeOf e') in
+              (instrumentExpr e') @ [mkCast signed ty e]
 
         | AddrOf lv ->
             instrumentLvalueAddr lv

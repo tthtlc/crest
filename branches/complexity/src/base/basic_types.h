@@ -28,20 +28,32 @@ static const branch_id_t kCallId = -1;
 static const branch_id_t kReturnId = -2;
 
 namespace ops {
-enum compare_op_t { EQ   = 0,  NEQ  = 1,
-                    GT   = 2,  LE   = 3,  LT   = 4,  GE = 5,
-                    S_GT = 6,  S_LE = 7,  S_LT = 8,  S_GE = 9 };
 
-enum binary_op_t { ADD = 0,          SUBTRACT = 1,    MULTIPLY = 2,
-                   DIV = 3,          S_DIV = 4,
-                   MOD = 5,          S_MOD = 6,
-                   SHIFT_L = 7,      SHIFT_R = 8,     S_SHIFT_R = 9,
-                   BITWISE_AND = 10,  BITWISE_OR = 11,  BITWISE_XOR = 12,
-                   CONCAT = 13,       EXTRACT = 14,     CONCRETE = 15};
+enum compare_op_t {
+  EQ   = 0,  NEQ  = 1,
+  GT   = 2,  LE   = 3,  LT   = 4,  GE = 5,
+  S_GT = 6,  S_LE = 7,  S_LT = 8,  S_GE = 9
+};
 
-enum pointer_op_t { ADD_PI = 0, SUBTRACT_PI = 1, SUBTRACT_PP = 2 };
+enum binary_op_t {
+  ADD = 0,           SUBTRACT = 1,     MULTIPLY = 2,
+  DIV = 3,           S_DIV = 4,
+  MOD = 5,           S_MOD = 6,
+  SHIFT_L = 7,       SHIFT_R = 8,      S_SHIFT_R = 9,
+  BITWISE_AND = 10,  BITWISE_OR = 11,  BITWISE_XOR = 12,
+  CONCAT = 13,       EXTRACT = 14,     CONCRETE = 15
+};
 
-enum unary_op_t { NEGATE = 0, LOGICAL_NOT = 1, BITWISE_NOT = 2, UNSIGNED_CAST = 3, SIGNED_CAST = 4};
+enum pointer_op_t {
+  ADD_PI = 0,       S_ADD_PI = 1,
+  SUBTRACT_PI = 2,  S_SUBTRACT_PI = 3,
+  SUBTRACT_PP = 4
+};
+
+enum unary_op_t {
+  NEGATE = 0, LOGICAL_NOT = 1, BITWISE_NOT = 2,
+  UNSIGNED_CAST = 3, SIGNED_CAST = 4
+};
 
 }  // namespace ops
 

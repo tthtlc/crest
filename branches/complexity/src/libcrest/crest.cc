@@ -29,24 +29,27 @@ static int pre_symbolic;
 
 // Tables for converting from operators defined in libcrest/crest.h to
 // those defined in base/basic_types.h.
-static const int kOpTable[] =
-  { // binary arithmetic
-    ops::ADD, ops::SUBTRACT, ops::MULTIPLY,
-    ops::DIV, ops::S_DIV, ops::MOD, ops::S_MOD,
-    // binary bitwise operators
-    ops::SHIFT_L, ops::SHIFT_R, ops::S_SHIFT_R,
-    ops::BITWISE_AND, ops::BITWISE_OR, ops::BITWISE_XOR,
-    // binary comparison
-    ops::EQ, ops::NEQ,
-    ops::GT, ops::S_GT, ops::LE, ops::S_LE,
-    ops::LT, ops::S_LT, ops::GE, ops::S_GE,
-    // unhandled binary operators (note: there aren't any)
-    ops::CONCRETE,
-    // unary operators
-    ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT, ops::UNSIGNED_CAST, ops::SIGNED_CAST,
-    // pointer operators
-    ops::ADD_PI, ops::SUBTRACT_PI, ops::SUBTRACT_PP,
-  };
+static const int kOpTable[] = {
+  // binary arithmetic
+  ops::ADD, ops::SUBTRACT, ops::MULTIPLY,
+  ops::DIV, ops::S_DIV, ops::MOD, ops::S_MOD,
+  // binary bitwise operators
+  ops::SHIFT_L, ops::SHIFT_R, ops::S_SHIFT_R,
+  ops::BITWISE_AND, ops::BITWISE_OR, ops::BITWISE_XOR,
+  // binary comparison
+  ops::EQ, ops::NEQ,
+  ops::GT, ops::S_GT, ops::LE, ops::S_LE,
+  ops::LT, ops::S_LT, ops::GE, ops::S_GE,
+  // unhandled binary operators (note: there aren't any)
+  ops::CONCRETE,
+  // unary operators
+  ops::NEGATE, ops::BITWISE_NOT, ops::LOGICAL_NOT,
+  ops::UNSIGNED_CAST, ops::SIGNED_CAST,
+  // pointer operators
+  ops::ADD_PI, ops::S_ADD_PI,
+  ops::SUBTRACT_PI, ops::S_SUBTRACT_PI,
+  ops::SUBTRACT_PP,
+};
 
 
 static void __CrestAtExit();
@@ -220,7 +223,7 @@ void __CrestClearStack(__CREST_ID id) {
 
 void __CrestApply1(__CREST_ID id, __CREST_OP op,
                    __CREST_TYPE ty, __CREST_VALUE val) {
-  assert((op >= __CREST_NEGATE) && (op <= __CREST_SIGNED_CAST));
+  assert((op >= __CREST_NEGATE) && (op <= __CREST_S_CAST));
 
   if (!pre_symbolic)
     SI->ApplyUnaryOp(id,
