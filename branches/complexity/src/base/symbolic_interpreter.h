@@ -94,6 +94,7 @@ class SymbolicInterpreter {
   inline void PushSymbolic(SymbolicExpr* expr, type_t ty, value_t value);
   inline void ClearPredicateRegister();
   inline size_t sizeOfType(type_t ty, value_t val);
+  inline void ScaleUpBy(bool isSigned, size_t size);
 };
 
 }  // namespace crest

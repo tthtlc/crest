@@ -76,6 +76,10 @@ class SymbolicExpr {
                                      ops::binary_op_t op,
                                      SymbolicExpr* e1, SymbolicExpr* e2);
 
+  static SymbolicExpr* NewBinaryExpr(type_t ty, value_t val,
+                                     ops::binary_op_t op,
+                                     SymbolicExpr* e1, value_t e2);
+
   static SymbolicExpr* NewCompareExpr(type_t ty, value_t val,
                                       ops::compare_op_t op,
                                       SymbolicExpr* e1, SymbolicExpr* e2);
