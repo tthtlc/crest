@@ -44,7 +44,7 @@ SymbolicExpr* SymbolicObject::read(addr_t addr, type_t ty, value_t val) const {
     return mem_.read(addr, ty, val);
   } else {
     // There have been symbolic writes, so return a deref.
-    return SymbolicExpr::NewConstDeref(ty, val, *this, addr);
+    return SymbolicExpr::NewConstDerefExpr(ty, val, *this, addr);
   }
 }
 

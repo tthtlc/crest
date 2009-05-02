@@ -84,16 +84,16 @@ SymbolicExpr* SymbolicExpr::NewCompareExpr(type_t ty, value_t val,
   return new CompareExpr(op, e1, e2, kSizeOfType[ty], val);
 }
 
-SymbolicExpr* SymbolicExpr::NewConstDeref(type_t ty, value_t val,
-                                          const SymbolicObject& obj,
-                                          addr_t addr) {
+SymbolicExpr* SymbolicExpr::NewConstDerefExpr(type_t ty, value_t val,
+                                              const SymbolicObject& obj,
+                                              addr_t addr) {
   return new DerefExpr(NewConcreteExpr(types::U_LONG, addr),
                        new SymbolicObject(obj), kSizeOfType[ty], val);
 }
 
-SymbolicExpr* SymbolicExpr::NewDeref(type_t ty, value_t val,
-                                     const SymbolicObject& obj,
-                                     SymbolicExpr* addr) {
+SymbolicExpr* SymbolicExpr::NewDerefExpr(type_t ty, value_t val,
+                                         const SymbolicObject& obj,
+                                         SymbolicExpr* addr) {
   return new DerefExpr(addr, new SymbolicObject(obj), kSizeOfType[ty], val);
 }
 

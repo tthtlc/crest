@@ -84,12 +84,13 @@ class SymbolicExpr {
                                       ops::compare_op_t op,
                                       SymbolicExpr* e1, SymbolicExpr* e2);
 
-  static SymbolicExpr* NewConstDeref(type_t ty, value_t val,
-                                     const SymbolicObject& obj, addr_t addr);
+  static SymbolicExpr* NewConstDerefExpr(type_t ty, value_t val,
+                                         const SymbolicObject& obj,
+                                         addr_t addr);
 
-  static SymbolicExpr* NewDeref(type_t ty, value_t val,
-                                const SymbolicObject& obj,
-                                SymbolicExpr* addr);
+  static SymbolicExpr* NewDerefExpr(type_t ty, value_t val,
+                                    const SymbolicObject& obj,
+                                    SymbolicExpr* addr);
 
   static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
 
