@@ -361,10 +361,10 @@ class crestInstrumentVisitor f =
         | false, Lt       -> 19  | true, Lt       -> 20
         | false, Ge       -> 21  | true, Ge       -> 22
         (* pointer ops *)
-        | false, PlusPI  ->  28  | true, PlusPI   -> 29
-        | false, IndexPI ->  30  | true, IndexPI  -> 31
-        | false, MinusPI ->  32  | true, MinusPI  -> 33
-        | _, MinusPP    ->   34
+        | false, PlusPI  ->  29  | true, PlusPI   -> 30
+        | false, IndexPI ->  29  | true, IndexPI  -> 30
+        | false, MinusPI ->  31  | true, MinusPI  -> 32
+        | _, MinusPP    ->   33
         (* all that's left are logical ops, which we should never encounter *)
         | _ -> invalid_arg "binaryOp"
     in
