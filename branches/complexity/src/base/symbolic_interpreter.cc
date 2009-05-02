@@ -278,6 +278,10 @@ void SymbolicInterpreter::ApplyBinPtrOp(id_t id, pointer_op_t op,
     if (op == ops::SUBTRACT_PP) {
       a.expr = SymbolicExpr::NewBinaryExpr(ty, value, ops::S_DIV, a.expr, size);
     }
+
+  } else {
+    // The operation is concrete, so just pop the stack.
+    stack_.pop_back();
   }
 
   a.concrete = value;
