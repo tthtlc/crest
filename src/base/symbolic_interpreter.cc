@@ -101,11 +101,7 @@ void SymbolicInterpreter::Deref(id_t id, addr_t addr, type_t ty, value_t value) 
   // Is this a symbolic dereference?
   const StackElem& se = stack_.back();
   if (obj && se.expr && !se.expr->IsConcrete()) {
-    // TODO: Set e to new expression representing dereference.
-	// e will have op_type as DEREF and node type as NONLINEAR
-    // e = new SymbolicDeref(new SymbolicObject(obj), ty, se.expr);
-	  e = new DerefExpr(se.expr, obj, ty, value);
-	  // Add the new symbolic object, address and type to e
+    e = SymbolicExpr::NewDerefExpr(ty, value, *obj, se.expr);
   } else {
     delete se.expr;
   }
