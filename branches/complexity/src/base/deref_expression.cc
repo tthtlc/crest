@@ -85,26 +85,43 @@ value_t DerefExpr::ConcreteValueFromBytes(size_t i, size_t size_) const {
 yices_expr DerefExpr::BitBlast(yices_context ctx) const {
   // Create a yices_function_type representing a function from bit_vector to bit_vector
   size_t size_ = size();
-  yices_type input_type[1] = { yices_mk_bitvector_type(ctx, size_) };
-  yices_type output_type = yices_mk_bitvector_type(ctx, size_);
+  size_t mem_length = object_->size() / size_;
+
+  //Naming the uninterpreted function
+  char c[32];
+  sprintf(c, "f%d",(int)this);
+
+  yices_type input_type[1] = { yices_mk_bitvector_type(ctx, size_*8) };
+  yices_type output_type = yices_mk_bitvector_type(ctx, size_*8);
   yices_type yices_function = yices_mk_function_type(ctx, input_type, 1, output_type);
 
-  // Populate the function
-  for(size_t i = 0; i < object_->size() / size_; i++) {
+  yices_var_decl fdecl = yices_mk_var_decl(ctx, c, yices_function);
+  yices_expr f = yices_mk_var_from_decl(ctx, fdecl);
+
+  SymbolicExpr* exp = NULL;
+
+  // Populate the function and asset
+  for(size_t i = 0; i < mem_length; i++) {
 
 	value_t concrete_value = this->ConcreteValueFromBytes(i*size_, size_);
-    SymbolicExpr* exp = object_->read(i * size_, types::U_INT, concrete_value);
+	exp = object_->read(i * size_, types::U_INT, concrete_value);
+	if(exp == NULL) {
+		exp = SymbolicExpr::NewConcreteExpr(types::U_INT, concrete_value);
+	}
 	yices_expr expression_at_i = exp->BitBlast(ctx);
-	yices_expr bit_vector_i[1] = { yices_mk_bv_constant(ctx, sizeof(size_t), i) };
-	yices_expr function_application = yices_mk_app(ctx, yices_function, bit_vector_i, 1);
-
-	// Make this application equal to the symbolic expression pointed by that address
-	yices_assert(ctx, yices_mk_eq(ctx, expression_at_i, function_application));
+	yices_expr bit_vector_i[1] = { yices_mk_bv_constant(ctx, size_*8, i) };
+	yices_expr function_application = yices_mk_app(ctx, f, bit_vector_i, 1);
+	//args_to_and[i] = yices_mk_diseq(ctx, expression_at_i, function_application);
+	yices_assert(ctx, yices_mk_eq(ctx, function_application, expression_at_i));
   }
 
   //Return the application of the function to addr_
   yices_expr args_yices_f[1] = { addr_->BitBlast(ctx) };
-  return yices_mk_app(ctx, yices_function, args_yices_f, 1);
+  //yices_expr t =  yices_mk_app(ctx, f, args_yices_f, 1);
+  //args_to_and[mem_length] = t;
+  //return yices_mk_or(ctx, args_to_and, mem_length+1);
+  return yices_mk_app(ctx, f, args_yices_f, 1);
+
 }
 
 bool DerefExpr::Equals(const SymbolicExpr& e) const {
