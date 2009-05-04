@@ -144,17 +144,43 @@ void SymbolicMemory::Slab::write(addr_t addr, size_t n, SymbolicExpr* e) {
   slots_[i] = e;
 }
 
-void SymbolicMemory::Slab::Serialize(string *s) const {
-  for (size_t i = 0; i < kSlabCapacity; i++)
-	slots_[i]->Serialize(s);
+
+void SymbolicMemory::Slab::Serialize(string* s) const {
+  // Format:
+  //  - Single char bitmap showing where SymbolicExpr's are.
+  //  - The SymbolicExpr's.
+
+  unsigned char c = 0;
+  for (size_t i = 0; i < kSlabCapacity; i++) {
+    c = (c << 1) | (slots_[i] != NULL);
+  }
+  s->push_back(c);
+
+  for (size_t i = 0; i < kSlabCapacity; i++) {
+    if (slots_[i] != NULL)
+      slots_[i]->Serialize(s);
+  }
 }
 
-SymbolicMemory::Slab* SymbolicMemory::Slab::Parse(istream &s) {
-  SymbolicExpr *slots[kSlabCapacity];
-  for (size_t i = 0; i < kSlabCapacity; i++)
-	slots[i] = SymbolicExpr::Parse(s);
-  return new SymbolicMemory::Slab(slots);
+
+bool SymbolicMemory::Slab::Parse(istream& in) {
+  // Assumption: slab is empty, so we don't have to clear it out.
+
+  unsigned int c = static_cast<unsigned int>(in.get());
+  for (size_t i = 0; i < kSlabCapacity; i++) {
+    c <<= 1;
+    if (!(c & 0x100))
+      continue;
+
+    slots_[i] = SymbolicExpr::Parse(in);
+    if (slots_[i] == NULL) {
+      return false;
+    }
+  }
+
+  return true;
 }
+
 
 void SymbolicMemory::Slab::Dump(addr_t addr) const {
   string s;
@@ -175,6 +201,7 @@ SymbolicMemory::SymbolicMemory() { }
 
 SymbolicMemory::SymbolicMemory(const SymbolicMemory& m)
   : mem_(m.mem_) { }
+
 
 SymbolicMemory::~SymbolicMemory() { }
 
@@ -253,33 +280,41 @@ void SymbolicMemory::concretize(addr_t addr, size_t n) {
 
 
 void SymbolicMemory::Serialize(string *s) const {
-  //Format is :mem_size() | i | mem_[i]
+  // Format is :mem_size() | i | mem_[i]
   size_t mem_size = mem_.size();
   s->append((char*)&mem_size, sizeof(size_t));
 
-  //Now write the memory contents
-  for(hash_map<addr_t, Slab>::const_iterator it = mem_.begin(); it != mem_.end(); it++) {
-	  s->append((char*)&(it->first), sizeof(addr_t));
-	  (it->second).Serialize(s);
+  // Now write the memory contents
+  hash_map<addr_t,Slab>::const_iterator i;
+  for (i = mem_.begin(); i != mem_.end(); ++i) {
+    s->append((char*)&(i->first), sizeof(addr_t));
+    i->second.Serialize(s);
   }
-
 }
 
-void SymbolicMemory::Parse(istream &s) {
-  size_t mem_size;
+
+bool SymbolicMemory::Parse(istream &s) {
+  // Assumption: This object is empty, so we don't have to clear it out.
+
+  size_t size;
   addr_t addr;
-  SymbolicMemory::Slab *slab;
-  
-  s.read((char*)&mem_size, sizeof(size_t));
 
-  for(size_t i = 0; i < mem_size; i++) {
-	s.read((char*)&addr, sizeof(addr_t));
-	slab = SymbolicMemory::Slab::Parse(s);
-	this->mem_[addr] = *slab;
+  s.read((char*)&size, sizeof(size));
+  if (s.fail())
+    return false;
+
+  for(size_t i = 0; i < size; i++) {
+    s.read((char*)&addr, sizeof(addr));
+    if (s.fail())
+      return false;
+
+    if (!mem_[addr].Parse(s))
+      return false;
   }
-  // TODO: We should be able to call something like this...
-  // return new SymbolicMemory(mem);
+
+  return true;
 }
+
 
 yices_expr SymbolicMemory::BitBlast(yices_context ctx, addr_t addr) {
   /*

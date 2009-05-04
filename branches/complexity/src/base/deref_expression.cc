@@ -22,13 +22,10 @@
 
 namespace crest {
 
-DerefExpr::DerefExpr(SymbolicExpr *c, SymbolicObject *o, size_t s, value_t v)
-  : SymbolicExpr(s,v), object_(o), addr_(c),
-    concrete_bytes_(new unsigned char[o->size()])
-{
-  // Copy bytes from the program.
-  memcpy((void*)concrete_bytes_, (void*)addr_, o->size());
-}
+DerefExpr::DerefExpr(SymbolicExpr *c, SymbolicObject *o, unsigned char* bytes,
+                     size_t s, value_t v)
+  : SymbolicExpr(s,v), object_(o), addr_(c), concrete_bytes_(bytes) { }
+
 
 DerefExpr::DerefExpr(const DerefExpr& de)
   : SymbolicExpr(de.size(), de.value()),
@@ -38,6 +35,7 @@ DerefExpr::DerefExpr(const DerefExpr& de)
   // Copy bytes from other DerefExpr.
   memcpy((void*)concrete_bytes_, de.concrete_bytes_, object_->size());
 }
+
 
 DerefExpr::~DerefExpr() {
   delete object_;
@@ -65,6 +63,7 @@ void DerefExpr::Serialize(string *s) const {
   SymbolicExpr::Serialize(s, kDerefNodeTag);
   object_->Serialize(s);
   addr_->Serialize(s);
+  s->append((char*)concrete_bytes_, object_->size());
 }
 
 value_t DerefExpr::ConcreteValueFromBytes(size_t i, size_t size_) const {
