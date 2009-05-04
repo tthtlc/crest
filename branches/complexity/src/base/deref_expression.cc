@@ -91,6 +91,11 @@ yices_expr DerefExpr::BitBlast(yices_context ctx) const {
   char c[32];
   sprintf(c, "f%d",(int)this);
 
+  //Bit-blast the address
+  yices_expr args_yices_f[1] = { addr_->BitBlast(ctx) };
+  // Assert that address is equal to one in the domain
+  yices_expr* t = new yices_expr[mem_length];
+
   yices_type input_type[1] = { yices_mk_bitvector_type(ctx, size_*8) };
   yices_type output_type = yices_mk_bitvector_type(ctx, size_*8);
   yices_type yices_function = yices_mk_function_type(ctx, input_type, 1, output_type);
@@ -100,26 +105,24 @@ yices_expr DerefExpr::BitBlast(yices_context ctx) const {
 
   SymbolicExpr* exp = NULL;
 
-  // Populate the function and asset
+  // Populate the function and assert
   for(size_t i = 0; i < mem_length; i++) {
 
 	value_t concrete_value = this->ConcreteValueFromBytes(i*size_, size_);
-	exp = object_->read(i * size_, types::U_INT, concrete_value);
+	exp = object_->read(object_->start() + i * size_, types::U_INT, concrete_value);
 	if(exp == NULL) {
 		exp = SymbolicExpr::NewConcreteExpr(types::U_INT, concrete_value);
 	}
 	yices_expr expression_at_i = exp->BitBlast(ctx);
-	yices_expr bit_vector_i[1] = { yices_mk_bv_constant(ctx, size_*8, i) };
+	yices_expr bit_vector_i[1] = { yices_mk_bv_constant(ctx, size_*8, i * size_ + object_->start()) };
 	yices_expr function_application = yices_mk_app(ctx, f, bit_vector_i, 1);
-	//args_to_and[i] = yices_mk_diseq(ctx, expression_at_i, function_application);
 	yices_assert(ctx, yices_mk_eq(ctx, function_application, expression_at_i));
+	t[i] = yices_mk_eq(ctx, args_yices_f[0], bit_vector_i[0]);
   }
 
+  //Assert that sumbolic address is equal to at one of the values in domain
+  yices_assert(ctx, yices_mk_or(ctx, t, mem_length));
   //Return the application of the function to addr_
-  yices_expr args_yices_f[1] = { addr_->BitBlast(ctx) };
-  //yices_expr t =  yices_mk_app(ctx, f, args_yices_f, 1);
-  //args_to_and[mem_length] = t;
-  //return yices_mk_or(ctx, args_to_and, mem_length+1);
   return yices_mk_app(ctx, f, args_yices_f, 1);
 
 }
