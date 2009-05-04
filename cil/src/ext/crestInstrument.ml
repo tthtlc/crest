@@ -481,7 +481,8 @@ class crestInstrumentVisitor f =
                              (addressOf lv)]
 
         | Field (f, _) ->
-            let fieldOff = cExp "&%l:lv1 - &%l:lv2" [("lv1", Fl lv); ("lv2", Fl lv')] in
+            let fieldOff = cExp "(void*)&%l:lv1 - (void*)&%l:lv2"
+                                [("lv1", Fl lv); ("lv2", Fl lv')] in
               (instrumentLvalueAddr lv')
               @ [mkLoad noAddr !typeOfSizeOf fieldOff ;
                  mkPtrApply2 (false, IndexPI) one (addressOf lv)]
