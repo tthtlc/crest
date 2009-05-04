@@ -54,7 +54,6 @@ SymbolicExpr* SymbolicMemory::Slab::read(addr_t addr,
                                          size_t n,
                                          value_t val) const {
   size_t i = addr & kOffsetMask;
-  // fprintf(stderr, "read %lu %zu %zu\n", addr, i, n);
 
   // Assumption: addr (and i) is n-aligned.
 
@@ -85,21 +84,22 @@ SymbolicExpr* SymbolicMemory::Slab::read(addr_t addr,
         } else {
           ret = SymbolicExpr::Concatenate(ret, slots_[i + j]->Clone());
         }
-        continue;
-      }
 
-      // Otherwise, the next piece is concrete.
-      while ((++j < n) && (slots_[j] == NULL)) ;
-      if (ret == NULL) {
-        if (j == n) return NULL;  // Whole read is concrete.
-        ret = SymbolicExpr::ExtractBytes(n, val, 0, j);
       } else {
-        SymbolicExpr* tmp =
-          SymbolicExpr::ExtractBytes(n, val, ret->size(), j - ret->size());
-        ret = SymbolicExpr::Concatenate(ret, tmp);
+        // Otherwise, the next piece is concrete.
+        while ((++j < n) && (slots_[i + j] == NULL)) ;
+        if (ret == NULL) {
+          if (j == n) return NULL;  // Whole read is concrete.
+          ret = SymbolicExpr::ExtractBytes(n, val, 0, j);
+        } else {
+          SymbolicExpr* tmp =
+            SymbolicExpr::ExtractBytes(n, val, ret->size(), j - ret->size());
+          ret = SymbolicExpr::Concatenate(ret, tmp);
+        }
       }
 
-    } while (ret->size() < n);
+      j = ret->size();
+    } while (j < n);
 
     return ret;
   }
@@ -109,8 +109,6 @@ SymbolicExpr* SymbolicMemory::Slab::read(addr_t addr,
 void SymbolicMemory::Slab::write(addr_t addr, size_t n, SymbolicExpr* e) {
   size_t i = addr & kOffsetMask;
   // Assumption: addr (and i) is n-aligned.
-
-  // fprintf(stderr, "write %lu %zu %zu\n", addr, i, n);
 
   { // See if we are overwriting part of a larger expression.
     size_t j = i;
@@ -182,8 +180,7 @@ SymbolicExpr* SymbolicMemory::read(addr_t addr, type_t ty, value_t val) const {
 
   // TODO: Have to deal with 8-byte long longs that are only aligned
   // to 4 bytes.
-  // fprintf(stderr, "read %lu %zu %zu\n",
-  //         addr, addr & Slab::kAddrMask, kSizeOfType[ty]);
+
   hash_map<addr_t,Slab>::const_iterator it = mem_.find(addr & Slab::kAddrMask);
   if (it == mem_.end())
     return NULL;
@@ -195,9 +192,6 @@ SymbolicExpr* SymbolicMemory::read(addr_t addr, type_t ty, value_t val) const {
 
 void SymbolicMemory::write(addr_t addr, SymbolicExpr* e) {
   assert(e != NULL);
-
-  // fprintf(stderr, "write %lu %zu %zu\n",
-  //         addr, addr & Slab::kAddrMask, e->size());
 
   // TODO: Have to deal with 8-byte long longs that are only aligned
   // to 4 bytes.
