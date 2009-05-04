@@ -14,6 +14,7 @@
 int main(void) {
   int a, b, c, d;
   char x, y, z;
+  short s;
 
   CREST_int(a);
   CREST_char(x);
@@ -30,6 +31,23 @@ int main(void) {
 
   *(((short*)&b) + 1) = 13;
 
+  z = *(((char*)&a));
+  z = *(((char*)&a) + 1);
+  z = *(((char*)&a) + 2);
+  z = *(((char*)&a) + 3);
+
   a = 1984;
+  *(((char*)&a) + 1) = y;
+  *(((char*)&a) + 3) = y;
+
+  d = b;
+
+  d = c;
+
+  s = *((short*)&a);
+
+  s = *(((short*)&b)+1);
+
+  d = a;
 }
 
