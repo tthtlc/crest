@@ -85,7 +85,7 @@ void SymbolicObject::Serialize(string* s) const {
   //Not keeping tracks of symbolic writes
   s->append((char*)&start_, sizeof(addr_t));
   s->append((char*)&size_, sizeof(size_t));
-  //mem_.Serialize(s);
+  mem_.Serialize(s);
 }
 
 SymbolicObject* SymbolicObject::Parse(istream& s) {
@@ -97,8 +97,9 @@ SymbolicObject* SymbolicObject::Parse(istream& s) {
   s.read((char*)&si, sizeof(size_t));
   if(s.fail()) return NULL;
 
-  //SymbolicMemory *mem = SymbolicMemory::Parse(s);
-  return new SymbolicObject(st, si);
+  SymbolicMemory *mem = new SymbolicMemory();
+  mem->Parse(s);
+  return new SymbolicObject(st, si, *mem);
 }
 
 yices_expr SymbolicObject::BitBlast(yices_context ctx, addr_t concrete_address) const {
