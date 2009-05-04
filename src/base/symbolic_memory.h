@@ -45,7 +45,7 @@ class SymbolicMemory {
 
   void Serialize(string *s) const;
 
-  static SymbolicMemory* Parse(istream &s);
+  void Parse(istream &s);
 
   yices_expr BitBlast(yices_context ctx, addr_t addr);
 

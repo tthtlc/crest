@@ -253,7 +253,6 @@ void SymbolicMemory::concretize(addr_t addr, size_t n) {
 
 
 void SymbolicMemory::Serialize(string *s) const {
-
   //Format is :mem_size() | i | mem_[i]
   size_t mem_size = mem_.size();
   s->append((char*)&mem_size, sizeof(size_t));
@@ -266,21 +265,20 @@ void SymbolicMemory::Serialize(string *s) const {
 
 }
 
-SymbolicMemory* SymbolicMemory::Parse(istream &s) {
+void SymbolicMemory::Parse(istream &s) {
   size_t mem_size;
   addr_t addr;
-  Slab *slab;
-  __gnu_cxx::hash_map<addr_t, Slab> mem;
-
+  SymbolicMemory::Slab *slab;
+  
   s.read((char*)&mem_size, sizeof(size_t));
+
   for(size_t i = 0; i < mem_size; i++) {
 	s.read((char*)&addr, sizeof(addr_t));
 	slab = SymbolicMemory::Slab::Parse(s);
-	mem[addr] = *slab;
+	this->mem_[addr] = *slab;
   }
   // TODO: We should be able to call something like this...
   // return new SymbolicMemory(mem);
-  return NULL;
 }
 
 yices_expr SymbolicMemory::BitBlast(yices_context ctx, addr_t addr) {
