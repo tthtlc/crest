@@ -87,14 +87,24 @@ SymbolicExpr* SymbolicExpr::NewCompareExpr(type_t ty, value_t val,
 SymbolicExpr* SymbolicExpr::NewConstDerefExpr(type_t ty, value_t val,
                                               const SymbolicObject& obj,
                                               addr_t addr) {
+  // Copy the concrete bytes from the program.
+  unsigned char* bytes = new unsigned char[obj.size()];
+  memcpy((void*)bytes, (void*)addr, obj.size());
+
   return new DerefExpr(NewConcreteExpr(types::U_LONG, addr),
-                       new SymbolicObject(obj), kSizeOfType[ty], val);
+                       new SymbolicObject(obj), bytes,
+                       kSizeOfType[ty], val);
 }
 
 SymbolicExpr* SymbolicExpr::NewDerefExpr(type_t ty, value_t val,
                                          const SymbolicObject& obj,
                                          SymbolicExpr* addr) {
-  return new DerefExpr(addr, new SymbolicObject(obj), kSizeOfType[ty], val);
+  // Copy the concrete bytes from the program.
+  unsigned char* bytes = new unsigned char[obj.size()];
+  memcpy((void*)bytes, (void*)(addr->value()), obj.size());
+
+  return new DerefExpr(addr, new SymbolicObject(obj), bytes,
+                       kSizeOfType[ty], val);
 }
 
 SymbolicExpr* SymbolicExpr::Concatenate(SymbolicExpr *e1, SymbolicExpr *e2) {
@@ -148,6 +158,7 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
 
   SymbolicObject *obj = NULL;
   SymbolicExpr *addr = NULL;
+  unsigned char* bytes = NULL;
 
   s.read((char *)val, sizeof(value_t));
 	  if(s.fail()) return NULL;
@@ -183,15 +194,25 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
 	  return new UnaryExpr(un_op_, child, *siz, *val);
 
   case kDerefNodeTag:
-	  obj = SymbolicObject::Parse(s);
-	  if(obj == NULL) { // That means read has failed in object::Parse
-		  return NULL;
-	  }
-	  addr = SymbolicExpr::Parse(s);
-	  if(addr == NULL) { // Read has failed in expr::Parse
-		  return NULL;
-	  }
-	  return new DerefExpr(addr, obj, *siz, *val);
+    obj = SymbolicObject::Parse(s);
+    if (obj == NULL) { // That means read has failed in object::Parse
+      return NULL;
+    }
+    addr = SymbolicExpr::Parse(s);
+    if (addr == NULL) { // Read has failed in expr::Parse
+      delete obj;
+      return NULL;
+    }
+    bytes = new unsigned char[obj->size()];
+    s.read((char*)bytes, obj->size());
+    if (s.fail()) {
+      delete obj;
+      delete addr;
+      delete bytes;
+      return NULL;
+    }
+    return new DerefExpr(addr, obj, bytes, *siz, *val);
+
   case kConstNodeTag:
 	  return new SymbolicExpr(*siz, *val);
 

@@ -40,7 +40,7 @@ class SymbolicObject {
   bool Equals(const SymbolicObject& o) const { return false; }
 
   void Serialize(string *s) const;
-  //Parsing
+
   static SymbolicObject* Parse(istream &s);
 
   yices_expr BitBlast(yices_context ctx, addr_t concrete_address) const;
@@ -50,6 +50,8 @@ class SymbolicObject {
   size_t size() const { return size_; }
 
  private:
+  bool ParseInternal(istream &s);
+
   typedef std::pair<SymbolicExpr*,SymbolicExpr*> Write;
 
   const addr_t start_;

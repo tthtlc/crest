@@ -24,7 +24,8 @@ namespace crest {
 
 class DerefExpr : public SymbolicExpr {
  public:
-  DerefExpr(SymbolicExpr* addr, SymbolicObject* o, size_t size, value_t val);
+  DerefExpr(SymbolicExpr* addr, SymbolicObject* o, unsigned char* bytes,
+            size_t size, value_t val);
   DerefExpr(const DerefExpr& de);
   ~DerefExpr();
 

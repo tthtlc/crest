@@ -44,8 +44,7 @@ class SymbolicMemory {
   void concretize(addr_t addr, size_t n);
 
   void Serialize(string *s) const;
-
-  void Parse(istream &s);
+  bool Parse(istream &s);
 
   yices_expr BitBlast(yices_context ctx, addr_t addr);
 
@@ -66,10 +65,9 @@ class SymbolicMemory {
     static const size_t kOffsetMask = kSlabCapacity - 1;
     static const size_t kAddrMask = ~kOffsetMask;
 
-    // Parsing and Serializing
-    inline void Serialize(string *s) const;
-
-    static SymbolicMemory::Slab* Parse(istream &s);
+    // Parsing and serializing.
+    void Serialize(string *s) const;
+    bool Parse(istream &s);
 
     // For debugging.
     void Dump(addr_t addr) const;
