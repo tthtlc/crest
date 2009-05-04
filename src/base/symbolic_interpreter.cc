@@ -138,7 +138,7 @@ void SymbolicInterpreter::Store(id_t id, addr_t addr) {
   } else {
     // Write to untracked region/object.
     if (se.expr && !se.expr->IsConcrete()) {
-      mem_.write(addr, se.ty, se.expr);
+      mem_.write(addr, se.expr);
     } else {
       delete se.expr;
       mem_.concretize(addr, sizeOfType(se.ty, se.concrete));
@@ -166,7 +166,7 @@ void SymbolicInterpreter::Write(id_t id, addr_t addr) {
     // Normal store -- may be concretizing a symbolic write to an
     // untracked region/object.
     if (val.expr && !val.expr->IsConcrete()) {
-      mem_.write(addr, val.ty, val.expr);
+      mem_.write(addr, val.expr);
     } else {
       mem_.concretize(addr, sizeOfType(val.ty, val.concrete));
       delete val.expr;
@@ -382,7 +382,7 @@ value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
     ex_.mutable_inputs()->push_back(0);
   }
 
-  mem_.write(addr, ty, new BasicExpr(size, val, num_inputs_));
+  mem_.write(addr, new BasicExpr(size, val, num_inputs_));
 
   num_inputs_++;
   return val;

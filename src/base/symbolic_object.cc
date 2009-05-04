@@ -53,10 +53,14 @@ void SymbolicObject::write(SymbolicExpr* sym_addr, addr_t addr,
                            SymbolicExpr* e, type_t ty, value_t val) {
 
   if ((writes_.size() == 0) && ((sym_addr == NULL) || sym_addr->IsConcrete())) {
-      // Normal write.
-      mem_.write(addr, ty, e);
-      delete e;
-
+    // Normal write.
+    if (e != NULL) {
+      mem_.write(addr, e);
+    } else {
+      // Assumption: No structs here.
+      assert(ty != types::STRUCT);
+      mem_.concretize(addr, kSizeOfType[ty]);
+    }
   } else {
     // There have been symbolic writes, so record this write.
     if (sym_addr == NULL) {
