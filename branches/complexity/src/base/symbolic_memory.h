@@ -20,6 +20,7 @@ using std::string;
 
 namespace crest {
 
+class Slab;
 class SymbolicExpr;
 
 class SymbolicMemory {
@@ -34,26 +35,41 @@ class SymbolicMemory {
   // representing structures for which some of the bytes are
   // symbolic.  (And, when ty == types::STRUCT, then val is the size
   // of the structure, in bytes.)
-  //
-  // NOTE: The 'val' parameter is somewhat less weird if the resulting
-  // symbolic expression must contain its own concrete value.
   SymbolicExpr* read(addr_t addr, type_t ty, value_t val) const;
 
-  // NOTE: Transfers ownership of 'e' to this object.
-  //
-  // TODO: Remove 'ty' parameter if expression contains its own type.
-  void write(addr_t addr, type_t ty, SymbolicExpr* e);
+  // NOTE: Transfers ownership of 'e' (which must not be NULL) to this object.
+  void write(addr_t addr, SymbolicExpr* e);
 
   void concretize(addr_t addr, size_t n);
 
   void Serialize(string *s) const;
 
   yices_expr BitBlast(yices_context ctx, addr_t addr);
+
   // For debugging.
   void Dump() const;
 
  private:
-  __gnu_cxx::hash_map<addr_t, SymbolicExpr*> mem_;
+  class Slab {
+   public:
+    Slab();
+    Slab(const Slab& slab);
+    ~Slab();
+    inline SymbolicExpr* read(addr_t addr, size_t n, value_t val) const;
+    inline void write(addr_t addr, size_t n, SymbolicExpr* e);
+
+    static const size_t kSlabCapacity = 8;
+    static const size_t kOffsetMask = kSlabCapacity - 1;
+    static const size_t kAddrMask = ~kOffsetMask;
+
+    // For debugging.
+    void Dump(addr_t addr) const;
+
+   private:
+    SymbolicExpr* slots_[kSlabCapacity];
+  };
+
+  __gnu_cxx::hash_map<addr_t, Slab> mem_;
 };
 
 }
