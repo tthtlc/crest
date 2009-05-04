@@ -23,21 +23,23 @@ struct foo {
   int y;
 };
 
+struct foo F[100];
+
 int main(void) {
-  struct foo f1, f2;
+  struct foo f2;
   struct bar b;
 
   CREST_int(b.x);
   CREST_int(b.y);
 
-  f1.x = 7;
-  f1.bar = b;
-  f1.y = 19;
+  F[1].x = 7;
+  F[1].bar = b;
+  F[1].y = 19;
 
   CREST_int(f2.x);
   CREST_int(f2.y);
 
-  f2 = f1;
+  f2 = F[1];
 
   if (f2.bar.x > 3) { }
   if (f2.y < 18) { }
