@@ -50,28 +50,32 @@ SymbolicExpr* SymbolicObject::read(addr_t addr, type_t ty, value_t val) const {
 
 
 void SymbolicObject::write(SymbolicExpr* sym_addr, addr_t addr,
-                           SymbolicExpr* e, type_t ty, value_t val) {
+                           SymbolicExpr* e) {
 
   if ((writes_.size() == 0) && ((sym_addr == NULL) || sym_addr->IsConcrete())) {
     // Normal write.
-    if (e != NULL) {
-      mem_.write(addr, e);
-    } else {
-      // Assumption: No structs here.
-      assert(ty != types::STRUCT);
-      mem_.concretize(addr, kSizeOfType[ty]);
-    }
+    mem_.write(addr, e);
   } else {
     // There have been symbolic writes, so record this write.
     if (sym_addr == NULL) {
       sym_addr = SymbolicExpr::NewConcreteExpr(types::U_LONG, addr);
     }
-    if (e == NULL) {
-      e = SymbolicExpr::NewConcreteExpr(ty, val);
-    }
     writes_.push_back(make_pair(sym_addr, e));
+ }
+}
+
+
+void SymbolicObject::concretize(SymbolicExpr* sym_addr, addr_t addr, size_t n) {
+  if ((writes_.size() == 0) && ((sym_addr == NULL) || sym_addr->IsConcrete())) {
+    // Normal write.
+    mem_.concretize(addr, n);
+  } else {
+    // There have been symbolic writes, so record this write.
+    // TODO: Don't know how to do this yet.
+    assert(false);
   }
 }
+
 
 void SymbolicObject::Serialize(string* s) const {
   //Format is: start_ | size_ | mem_
