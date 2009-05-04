@@ -133,8 +133,12 @@ void SymbolicInterpreter::Store(id_t id, addr_t addr) {
   // Is this a write to an object?
   SymbolicObject* obj = obj_tracker_.find(addr);
   if (obj != NULL) {
-    // Transfers ownership of se.expr.
-    obj->write(NULL, addr, se.expr, se.ty, se.concrete);
+    if (se.expr && !se.expr->IsConcrete()) {
+      // Transfers ownership of se.expr.
+      obj->write(NULL, addr, se.expr);
+    } else {
+      obj->concretize(NULL, addr, sizeOfType(se.ty, se.concrete));
+    }
   } else {
     // Write to untracked region/object.
     if (se.expr && !se.expr->IsConcrete()) {
@@ -160,8 +164,12 @@ void SymbolicInterpreter::Write(id_t id, addr_t addr) {
   // Is this a write to an object.
   SymbolicObject* obj = obj_tracker_.find(addr);
   if (obj != NULL) {
-    // Transfers ownership of dest.expr and val.expr.
-    obj->write(dest.expr, addr, val.expr, val.ty, val.concrete);
+    if (val.expr && !val.expr->IsConcrete()) {
+      // Transfers ownership of dest.expr and val.expr.
+      obj->write(dest.expr, addr, val.expr);
+    } else {
+      obj->concretize(dest.expr, addr, sizeOfType(val.ty, val.concrete));
+    }
   } else {
     // Normal store -- may be concretizing a symbolic write to an
     // untracked region/object.

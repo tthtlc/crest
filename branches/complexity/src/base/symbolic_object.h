@@ -32,8 +32,9 @@ class SymbolicObject {
 
   SymbolicExpr* read(addr_t addr, type_t ty, value_t val) const;
 
-  void write(SymbolicExpr* sym_addr, addr_t addr,
-             SymbolicExpr* e, type_t ty, value_t val);
+  void write(SymbolicExpr* sym_addr, addr_t addr, SymbolicExpr* e);
+
+  void concretize(SymbolicExpr* sym_addr, addr_t addr, size_t n);
 
   bool Equals(const SymbolicObject& o) const { return false; }
 
