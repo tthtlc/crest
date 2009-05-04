@@ -103,12 +103,39 @@ SymbolicExpr* SymbolicExpr::Concatenate(SymbolicExpr *e1, SymbolicExpr *e2) {
                         (e1->value() << (8 * e2->size())) + e2->value());
 }
 
-SymbolicExpr* SymbolicExpr::ExtractByte(SymbolicExpr* e, size_t i) {
-  // Extract i-th most significant byte.
-  value_t val = (e->value() >> (e->size() - i - 1)) & 0xFF;
-  SymbolicExpr* i_e = NewConcreteExpr(types::U_LONG, i);
-  return new BinaryExpr(ops::EXTRACT, e, i_e,  1, val);
+
+SymbolicExpr* SymbolicExpr::ExtractBytes(size_t size, value_t value,
+                                         size_t i, size_t n) {
+  // Assumption: i is n-aligned.
+  assert(i % n == 0);
+
+  // Little-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xCD
+  // Big-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xEF
+#ifdef BIG_ENDIAN
+  i = size - i - n;
+#endif
+
+  // Extracting i-th, i+1-th, ..., i+n-1-th least significant bytes.
+  return new SymbolicExpr(n, (value >> (8*i)) & ((1 << (8*n)) - 1));
 }
+
+
+SymbolicExpr* SymbolicExpr::ExtractBytes(SymbolicExpr* e, size_t i, size_t n) {
+  // Assumption: i is n-aligned.
+  assert(i % n == 0);
+
+  // Little-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xCD
+  // Big-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xEF
+#ifdef BIG_ENDIAN
+  i = e->size() - i - n;
+#endif
+
+  // Extracting i-th, i+1-th, ..., i+n-1-th least significant bytes.
+  value_t val = (e->value() >> (8*i)) & ((1 << (8*n)) - 1);
+  SymbolicExpr* i_e = NewConcreteExpr(types::U_LONG, i);
+  return new BinaryExpr(ops::EXTRACT, e, i_e,  n, val);
+}
+
 
 SymbolicExpr* SymbolicExpr::Parse(istream& s) {
   value_t* val = new value_t(sizeof(value_t));

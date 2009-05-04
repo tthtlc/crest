@@ -94,7 +94,15 @@ class SymbolicExpr {
 
   static SymbolicExpr* Concatenate(SymbolicExpr* e1, SymbolicExpr* e2);
 
-  static SymbolicExpr* ExtractByte(SymbolicExpr* e, size_t i);
+  // Extract n bytes from e, starting at the i-th leftmost byte
+  // (and then the i+1-th most significant, etc.).
+  //
+  // NOTE: This function (should) respect endian-ness, returning
+  // *most* significant bytes when configured as big-endian and
+  // *least* significant bytes when confugred as little-endian.
+  static SymbolicExpr* ExtractBytes(SymbolicExpr* e, size_t i, size_t n);
+  static SymbolicExpr* SymbolicExpr::ExtractBytes(size_t size, value_t value,
+                                                  size_t i, size_t n);
 
   // Virtual methods for dynamic casting.
   virtual const UnaryExpr* CastUnaryExpr() const { return NULL; }

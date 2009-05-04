@@ -85,9 +85,10 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
   case ops::CONCAT:
     return yices_mk_bv_concat(ctx, e1, e2);
   case ops::EXTRACT:
-    // Assumption: right_ is concrete.
-    end = 8*(left_->size() - right_->value()) - 1;
-    start = end - 7;
+    // Extract the i-th, i+1-th, ..., i+size()-th least significant bytes.
+    // (Assumption: right_ is concrete.)
+    start = 8 * right_->value();
+    end = start + 8*size();
     return yices_mk_bv_extract(ctx, end, start, e1);
   default:
     fprintf(stderr, "Unknown/unhandled binary operator: %d\n", binary_op_);
