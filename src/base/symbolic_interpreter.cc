@@ -290,7 +290,6 @@ void SymbolicInterpreter::ApplyBinPtrOp(id_t id, pointer_op_t op,
 
   a.concrete = value;
   a.ty = ty;
-
   // Stack has already been popped.
   IFDEBUG(DumpMemory());
 }

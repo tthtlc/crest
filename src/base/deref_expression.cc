@@ -67,10 +67,45 @@ void DerefExpr::Serialize(string *s) const {
   addr_->Serialize(s);
 }
 
+value_t DerefExpr::ConcreteValueFromBytes(size_t i, size_t size_) const {
+  //Read size_ bytes at offset i from concrete_bytes_
+  size_t concrete_value = 0;
+  for(size_t j = 0; j < size_; j++) {
+	char c = concrete_bytes_[i+j];
+
+#ifdef BIG_ENDIAN
+  concrete_value = concrete_value>>(8*sizeof(char)) | c<<(8*(size_-j-1)*sizeof(char));
+#else
+  concrete_value = conconcrete_value<<(8*sizeof(char)) | c;
+#endif
+
+  }
+  return concrete_value;
+}
+
 yices_expr DerefExpr::BitBlast(yices_context ctx) const {
-  //Ignore symbolic address for now. Use the concrete value of the address and look at the expression in the memory
-  addr_t concrete_address = (addr_t)addr_->value();
-  return object_->BitBlast(ctx, concrete_address);
+  // Create a yices_function_type representing a function from bit_vector to bit_vector
+  size_t size_ = size();
+  yices_type input_type[1] = { yices_mk_bitvector_type(ctx, size_) };
+  yices_type output_type = yices_mk_bitvector_type(ctx, size_);
+  yices_type yices_function = yices_mk_function_type(ctx, input_type, 1, output_type);
+
+  // Populate the function
+  for(size_t i = 0; i < object_->size() / size_; i++) {
+
+	value_t concrete_value = this->ConcreteValueFromBytes(i*size_, size_);
+    SymbolicExpr* exp = object_->read(i * size_, types::U_INT, concrete_value);
+	yices_expr expression_at_i = exp->BitBlast(ctx);
+	yices_expr bit_vector_i[1] = { yices_mk_bv_constant(ctx, sizeof(size_t), i) };
+	yices_expr function_application = yices_mk_app(ctx, yices_function, bit_vector_i, 1);
+
+	// Make this application equal to the symbolic expression pointed by that address
+	yices_assert(ctx, yices_mk_eq(ctx, expression_at_i, function_application));
+  }
+
+  //Return the application of the function to addr_
+  yices_expr args_yices_f[1] = { addr_->BitBlast(ctx) };
+  return yices_mk_app(ctx, yices_function, args_yices_f, 1);
 }
 
 bool DerefExpr::Equals(const SymbolicExpr& e) const {

@@ -50,6 +50,8 @@ class DerefExpr : public SymbolicExpr {
   const SymbolicExpr *addr_;
 
   const unsigned char* concrete_bytes_;
+
+  inline value_t ConcreteValueFromBytes(size_t i, size_t size_) const;
 };
 
 }  // namespace crest
