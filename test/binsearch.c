@@ -15,21 +15,23 @@
 int X[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 int main(void) {
-  int a, b;
+  int a, max = 7, min = 0;
 
   CREST_int(a);
-  CREST_int(b);
-
-  X[2] = b;
-  X[3] = b+1;
-
-  X[7] = b+2;
-
-  if (X[a+b] == b+1) {
+ 
+ while(max > min) {
+  int mid = (min + max) /2;
+  if (X[mid] == a) {
     printf("Yes\n");
-  } else {
+    break;
+  } else if(X[mid] < a) {
     printf("No\n");
+    min = mid + 1;
   }
-
+  else {
+   printf("No\n");
+   max = mid - 1;
+  }
+ }	
   return 0;
 }

@@ -123,4 +123,7 @@ yices_expr SymbolicObject::BitBlast(yices_context ctx, addr_t concrete_address) 
 	return m->BitBlast(ctx, concrete_address - start_);
 }
 
+void SymbolicObject::Dump() const {
+	mem_.Dump();
+}
 }  // namespace crest
