@@ -17,6 +17,7 @@
 #include "base/basic_types.h"
 
 using std::string;
+using std::istream;
 
 namespace crest {
 
@@ -44,6 +45,8 @@ class SymbolicMemory {
 
   void Serialize(string *s) const;
 
+  static SymbolicMemory* Parse(istream &s);
+
   yices_expr BitBlast(yices_context ctx, addr_t addr);
 
   // For debugging.
@@ -54,6 +57,7 @@ class SymbolicMemory {
    public:
     Slab();
     Slab(const Slab& slab);
+    Slab(SymbolicExpr **slot);
     ~Slab();
     inline SymbolicExpr* read(addr_t addr, size_t n, value_t val) const;
     inline void write(addr_t addr, size_t n, SymbolicExpr* e);
@@ -61,6 +65,11 @@ class SymbolicMemory {
     static const size_t kSlabCapacity = 8;
     static const size_t kOffsetMask = kSlabCapacity - 1;
     static const size_t kAddrMask = ~kOffsetMask;
+
+    // Parsing and Serializing
+    inline void Serialize(string *s) const;
+
+    static SymbolicMemory::Slab* Parse(istream &s);
 
     // For debugging.
     void Dump(addr_t addr) const;

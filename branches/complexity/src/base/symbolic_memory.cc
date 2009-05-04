@@ -10,9 +10,9 @@
 
 #include <algorithm>
 #include <utility>
+#include <assert.h>
 
 #include "base/symbolic_memory.h"
-
 #include "base/symbolic_expression.h"
 
 using std::make_pair;
@@ -42,6 +42,10 @@ SymbolicMemory::Slab::Slab(const Slab& slab) {
   }
 }
 
+SymbolicMemory::Slab::Slab(SymbolicExpr** slots) {
+  for(size_t i = 0; i < kSlabCapacity; i++)
+	slots_[i] = slots[i];
+}
 
 SymbolicMemory::Slab::~Slab() {
   for (size_t i = 0; i < kSlabCapacity; i++) {
@@ -140,6 +144,17 @@ void SymbolicMemory::Slab::write(addr_t addr, size_t n, SymbolicExpr* e) {
   slots_[i] = e;
 }
 
+void SymbolicMemory::Slab::Serialize(string *s) const {
+  for (size_t i = 0; i < kSlabCapacity; i++)
+	slots_[i]->Serialize(s);
+}
+
+SymbolicMemory::Slab* SymbolicMemory::Slab::Parse(istream &s) {
+  SymbolicExpr *slots[kSlabCapacity];
+  for (size_t i = 0; i < kSlabCapacity; i++)
+	slots[i] = SymbolicExpr::Parse(s);
+  return new SymbolicMemory::Slab(slots);
+}
 
 void SymbolicMemory::Slab::Dump(addr_t addr) const {
   string s;
@@ -160,7 +175,6 @@ SymbolicMemory::SymbolicMemory() { }
 
 SymbolicMemory::SymbolicMemory(const SymbolicMemory& m)
   : mem_(m.mem_) { }
-
 
 SymbolicMemory::~SymbolicMemory() { }
 
@@ -224,7 +238,7 @@ void SymbolicMemory::concretize(addr_t addr, size_t n) {
 
     // Compute the largest size we can write (i.e. concretize) given
     // alignment constraints.
-    size_t sz = min(addr & -addr, Slab::kSlabCapacity);
+    size_t sz = min((size_t)(addr & -addr), Slab::kSlabCapacity);
     while (sz > n) {
       sz >>= 1;
     }
@@ -239,19 +253,35 @@ void SymbolicMemory::concretize(addr_t addr, size_t n) {
 
 
 void SymbolicMemory::Serialize(string *s) const {
-  /*
+
   //Format is :mem_size() | i | mem_[i]
   size_t mem_size = mem_.size();
   s->append((char*)&mem_size, sizeof(size_t));
 
   //Now write the memory contents
-  for(hash_map<addr_t, SymbolicExpr*>::const_iterator it = mem_.begin(); it != mem_.end(); it++) {
+  for(hash_map<addr_t, Slab>::const_iterator it = mem_.begin(); it != mem_.end(); it++) {
 	  s->append((char*)&(it->first), sizeof(addr_t));
-	  (it->second)->Serialize(s);
+	  (it->second).Serialize(s);
   }
-  */
+
 }
 
+SymbolicMemory* SymbolicMemory::Parse(istream &s) {
+  size_t mem_size;
+  addr_t addr;
+  Slab *slab;
+  __gnu_cxx::hash_map<addr_t, Slab> mem;
+
+  s.read((char*)&mem_size, sizeof(size_t));
+  for(size_t i = 0; i < mem_size; i++) {
+	s.read((char*)&addr, sizeof(addr_t));
+	slab = SymbolicMemory::Slab::Parse(s);
+	mem[addr] = *slab;
+  }
+  // TODO: We should be able to call something like this...
+  // return new SymbolicMemory(mem);
+  return NULL;
+}
 
 yices_expr SymbolicMemory::BitBlast(yices_context ctx, addr_t addr) {
   /*

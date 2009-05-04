@@ -28,6 +28,7 @@ class SymbolicObject {
  public:
   SymbolicObject(addr_t start, size_t size);
   SymbolicObject(const SymbolicObject& o);
+  SymbolicObject(addr_t start, size_t size, SymbolicMemory mem);
   ~SymbolicObject();
 
   SymbolicExpr* read(addr_t addr, type_t ty, value_t val) const;

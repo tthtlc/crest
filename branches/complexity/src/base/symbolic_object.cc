@@ -31,6 +31,9 @@ SymbolicObject::SymbolicObject(const SymbolicObject &obj)
   }
 }
 
+SymbolicObject::SymbolicObject(addr_t start, size_t size, SymbolicMemory mem)
+  : start_(start), size_(size), mem_(mem) { }
+
 SymbolicObject::~SymbolicObject() {
   for (vector<Write>::iterator it = writes_.begin(); it != writes_.end(); ++it) {
     delete it->first;
@@ -94,6 +97,7 @@ SymbolicObject* SymbolicObject::Parse(istream& s) {
   s.read((char*)&si, sizeof(size_t));
   if(s.fail()) return NULL;
 
+  //SymbolicMemory *mem = SymbolicMemory::Parse(s);
   return new SymbolicObject(st, si);
 }
 
