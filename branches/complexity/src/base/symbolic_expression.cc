@@ -108,7 +108,12 @@ SymbolicExpr* SymbolicExpr::NewDerefExpr(type_t ty, value_t val,
 }
 
 SymbolicExpr* SymbolicExpr::Concatenate(SymbolicExpr *e1, SymbolicExpr *e2) {
-  return new BinaryExpr(ops::CONCAT, e1, e2,
+  return new BinaryExpr(ops::CONCAT,
+#ifdef CREST_BIG_ENDIAN
+                        e1, e2,
+#else
+                        e2, e1,
+#endif
                         e1->size() + e2->size(),
                         (e1->value() << (8 * e2->size())) + e2->value());
 }
@@ -121,7 +126,7 @@ SymbolicExpr* SymbolicExpr::ExtractBytes(size_t size, value_t value,
 
   // Little-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xCD
   // Big-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xEF
-#ifdef BIG_ENDIAN
+#ifdef CREST_BIG_ENDIAN
   i = size - i - n;
 #endif
 
@@ -136,7 +141,7 @@ SymbolicExpr* SymbolicExpr::ExtractBytes(SymbolicExpr* e, size_t i, size_t n) {
 
   // Little-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xCD
   // Big-Endian Example: Extract(0xABCDEF12, 4, 2) => 0xEF
-#ifdef BIG_ENDIAN
+#ifdef CREST_BIG_ENDIAN
   i = e->size() - i - n;
 #endif
 

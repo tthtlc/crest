@@ -72,10 +72,10 @@ value_t DerefExpr::ConcreteValueFromBytes(size_t i, size_t size_) const {
   for(size_t j = 0; j < size_; j++) {
 	char c = concrete_bytes_[i+j];
 
-#ifdef BIG_ENDIAN
+#ifndef CREST_BIG_ENDIAN
   concrete_value = concrete_value>>(8*sizeof(char)) | c<<(8*(size_-j-1)*sizeof(char));
 #else
-  concrete_value = conconcrete_value<<(8*sizeof(char)) | c;
+  concrete_value = concrete_value<<(8*sizeof(char)) | c;
 #endif
 
   }

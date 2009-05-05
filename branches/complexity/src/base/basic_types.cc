@@ -35,7 +35,7 @@ const char* kBinaryOpStr[] = {
 };
 
 const char* kUnaryOpStr[] = {
-  "-", "!", "~", "cast"
+  "-", "!", "~", "u_cast", "s_cast"
 };
 
 const char* kMinValueStr[] = {
