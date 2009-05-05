@@ -1,0 +1,13 @@
+
+To compile with CREST (although really we should merge all of this
+code into a single file):
+
+LIBS='-lcrest -lyices -lstdc++' \
+LDFLAGS='-L../../lib -L/Users/jburnim/yices-1.0.14/lib' \
+CFLAGS='-I../../include -g' ./configure --enable-shared=no
+
+make CC='../../cil/bin/cilly --save-temps --doCrestInstrument --noPrintLn'
+
+(And: Always "make clean" before re-building.)
+
+
