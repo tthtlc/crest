@@ -31,6 +31,7 @@ class SymbolicPath {
  public:
   SymbolicPath();
   SymbolicPath(bool pre_allocate);
+  SymbolicPath(const SymbolicPath &p);
   ~SymbolicPath();
 
   void Swap(SymbolicPath& sp);

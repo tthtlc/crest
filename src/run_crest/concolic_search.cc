@@ -71,7 +71,7 @@ Search::Search(const string& program, int max_iterations)
     //NEW : Tracking longest paths found
     length_longest_path_ = 0;
     num_longest_path_ = 0;
-    longest_paths_.reserve(100000);
+    longest_paths_.clear();
     //END NEW
 
     ifstream in("branches");
@@ -242,23 +242,11 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
 	  length_longest_path_ = total_branches;
 	  num_longest_path_ = 1;
 	  longest_paths_.clear();
-	  longest_paths_.push_back(&path);
+	  longest_paths_.push_back(new SymbolicPath(path));
   }
   else if(total_branches == length_longest_path_) {
-	  //Search in the longest path
-	  bool flag = false;
-	  /*
-	  for(int i =0; i < (int)longest_paths_.size(); i++) {
-		  SymbolicPath p = longest_paths_[i];
-		  if(p.equals(path)) {
-			  flag = true;
-			  break;
-		  }
-	  }*/
-	  if(!flag) {
-		num_longest_path_++;
-		longest_paths_.push_back(&path);
-	  }
+    num_longest_path_++;
+    longest_paths_.push_back(new SymbolicPath(path));
   }
 
   for (BranchIt i = branches.begin(); i != branches.end(); ++i) {
@@ -414,6 +402,28 @@ void BoundedDepthFirstSearch::Run() {
 
   DFS(0, max_depth_, ex);
   // DFS(0, ex);
+
+#ifdef DEBUG
+  string s = "";
+  fprintf(stderr, "Longest path constraint is %d\n", longest_paths_[0]->branches().size());
+  const SymbolicPath *p = longest_paths_[0];
+  const vector<SymbolicExpr*> constraints = p->constraints();
+  for(size_t i = 0; i < constraints.size(); i++) {
+    constraints[i]->AppendToString(&s);
+    s.push_back('\n');
+  }
+  fprintf(stderr, "%s\n", s.c_str());
+
+  //Printing the inputs
+  fprintf(stderr, "Worst case input is:\n");
+  map<var_t, value_t> soln;
+  vector<const SymbolicExpr*> cs(constraints.begin(), constraints.end());
+  bool success = YicesSolver::Solve(ex.vars(), cs, &soln);
+  if(success) {
+    for(map<var_t, value_t>::const_iterator it = soln.begin(); it != soln.end(); it++) 
+      fprintf(stderr, "x%u = %llu\n", it->first, it->second);
+  }
+#endif
 }
 
   /*
