@@ -191,6 +191,11 @@ let isSymbolicType ty =
    | TInt _ | TPtr _ | TEnum _ -> true
    | _ -> false
 
+let isStructureType ty =
+  match (unrollType ty) with
+    | TComp _ -> true
+    | _ -> false
+
 let isSignedType ty =
   match (unrollType ty) with
     | TInt (kind, _) -> isSigned kind
@@ -405,7 +410,10 @@ class crestInstrumentVisitor f =
         (* Arrays, structures, and unions are "aggregates". *)
         | TArray _             -> 10
         | TComp _              -> 10
-        | _ -> invalid_arg "toType"
+        (* Treat floating point like structures. *)
+        | TFloat _             -> 10
+        (* Other. *)
+        | _ -> invalid_arg (Pretty.sprint 2 (d_type () ty))
     in
       integer tyCode
   in
@@ -522,6 +530,11 @@ class crestInstrumentVisitor f =
               (instrumentExpr e1)
               @ (instrumentExpr e2)
               @ [mkApply2 (signed, op) ty e]
+
+        | CastE (_, e') when isStructureType ty ->
+            (* Structure casts are meaningless -- just adding or
+               removing const modifiers -- so skip. *)
+            instrumentExpr e'
 
         | CastE (_, e') ->
             let signed = isSignedType (typeOf e') in

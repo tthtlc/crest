@@ -33,7 +33,7 @@ int main(void) {
   CREST_int(b.y);
 
   F[1].x = 7;
-  F[1].bar = b;
+  F[1].bar = (const struct bar)b;
   F[1].y = 19;
 
   CREST_int(f2.x);
@@ -45,6 +45,8 @@ int main(void) {
   if (f2.y < 18) { }
   if (f2.bar.y == 7) { }
   if (f2.x > 0) { }
+
+  f2 = (const struct foo)(*(F+19));
 
   return 0;
 }
