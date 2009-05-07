@@ -23,14 +23,14 @@ SymbolicPath::SymbolicPath(bool pre_allocate) {
   }
 }
 
-  SymbolicPath::SymbolicPath(const SymbolicPath &p) 
-    : branches_(p.branches_), 
-      constraints_idx_(p.constraints_idx_), 
-      constraints_(p.constraints_) { 
+  SymbolicPath::SymbolicPath(const SymbolicPath &p)
+    : branches_(p.branches_),
+      constraints_idx_(p.constraints_idx_),
+      constraints_(p.constraints_) {
     for(size_t i = 0; i < p.constraints_.size(); i++)
       constraints_[i] = p.constraints_[i]->Clone();
   }
-    
+
 
 SymbolicPath::~SymbolicPath() {
   for (size_t i = 0; i < constraints_.size(); i++)
@@ -48,9 +48,15 @@ void SymbolicPath::Push(branch_id_t bid) {
 }
 
 void SymbolicPath::Push(branch_id_t bid, SymbolicExpr* constraint) {
+  bool flag = true;
   if (constraint) {
-    constraints_.push_back(constraint);
-    constraints_idx_.push_back(branches_.size());
+    for(size_t i =0; i < constraints_.size(); i++)
+      if(constraints_[i]->Equals(*constraint))
+    	flag = false;
+    if(flag) {
+      constraints_.push_back(constraint);
+      constraints_idx_.push_back(branches_.size());
+    }
   }
   branches_.push_back(bid);
 }

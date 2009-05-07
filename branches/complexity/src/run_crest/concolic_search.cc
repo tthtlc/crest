@@ -415,14 +415,19 @@ void BoundedDepthFirstSearch::Run() {
   fprintf(stderr, "%s\n", s.c_str());
 
   //Printing the inputs
-  fprintf(stderr, "Worst case input is:\n");
+  fprintf(stderr, "Worst case inputs are:\n");
   map<var_t, value_t> soln;
-  vector<const SymbolicExpr*> cs(constraints.begin(), constraints.end());
-  bool success = YicesSolver::Solve(ex.vars(), cs, &soln);
-  if(success) {
-    for(map<var_t, value_t>::const_iterator it = soln.begin(); it != soln.end(); it++) 
-      fprintf(stderr, "x%u = %llu\n", it->first, it->second);
+  for(size_t i = 0; i < longest_paths_.size(); i++) {
+	const vector<SymbolicExpr*> constraints = longest_paths_[i]->constraints();
+	vector<const SymbolicExpr*> cs(constraints.begin(), constraints.end());
+	bool success = YicesSolver::Solve(ex.vars(), cs, &soln);
+	if(success) {
+	   for(map<var_t, value_t>::const_iterator it = soln.begin(); it != soln.end(); it++)
+	      fprintf(stderr, "x%u = %llu\n", it->first, it->second);
+	}
+	fprintf(stderr, "----------------------------------------\n");
   }
+
 #endif
 }
 
