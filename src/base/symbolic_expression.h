@@ -68,6 +68,7 @@ class SymbolicExpr {
 
   // Factory methods for constructing symbolic expressions.
   static SymbolicExpr* NewConcreteExpr(type_t ty, value_t val);
+  static SymbolicExpr* NewConcreteExpr(size_t size, value_t val);
 
   static SymbolicExpr* NewUnaryExpr(type_t ty, value_t val,
                                     ops::unary_op_t op, SymbolicExpr* e);
