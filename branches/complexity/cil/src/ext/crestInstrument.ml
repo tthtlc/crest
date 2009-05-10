@@ -265,7 +265,7 @@ object (self)
           if (b1.bstmts == []) then b1.bstmts <- [mkEmptyStmt ()] ;
           if (b2.bstmts == []) then b2.bstmts <- [mkEmptyStmt ()] ;
           (* Ensure the conditional is actually a predicate. *)
-          s.skind <- If (mkPredicate e false, b1, b2, loc) ;
+          (* s.skind <- If (mkPredicate e false, b1, b2, loc) ; *)
           DoChildren
 
       | _ -> DoChildren
@@ -629,8 +629,10 @@ object (self)
       let (_, _, isVarArgs, _) = splitFunctionType f.svar.vtype in
       let paramsToInst = List.filter isSymbolic f.sformals in
         addFunction () ;
-        if (not isVarArgs) then
-          prependToBlock (List.rev_map instParam paramsToInst) f.sbody ;
+        (if (not isVarArgs) then
+           prependToBlock (List.rev_map instParam paramsToInst) f.sbody
+         else
+           prependToBlock [mkClearStack ()] f.sbody) ;
         prependToBlock [mkCall !funCount] f.sbody ;
         DoChildren
 
