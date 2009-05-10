@@ -93,6 +93,7 @@ Search::Search(const string& program, int max_iterations)
     max_function_ = branch_count_.size();
   }
 
+  /*
   // Compute the paired-branch map.
   paired_branch_.resize(max_branch_);
   for (size_t i = 0; i < branches_.size(); i += 2) {
@@ -109,6 +110,7 @@ Search::Search(const string& program, int max_iterations)
       }
     }
   }
+  */
 
   // Initialize all branches to "uncovered" (and functions to "unreached").
   total_num_covered_ = num_covered_ = 0;
@@ -174,11 +176,13 @@ void Search::WriteCoverageToFileOrDie(const string& file) {
     exit(-1);
   }
 
+  /*
   for (BranchIt i = branches_.begin(); i != branches_.end(); ++i) {
     if (total_covered_[*i]) {
       fprintf(f, "%d\n", *i);
     }
   }
+  */
 
   fclose(f);
 }
@@ -238,17 +242,19 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
   unsigned int total_branches = branches.size();
 
   // NEW : Track the longest path
-  if(total_branches > length_longest_path_) {
-	  length_longest_path_ = total_branches;
-	  num_longest_path_ = 1;
-	  longest_paths_.clear();
-	  longest_paths_.push_back(new SymbolicPath(path));
-  }
-  else if(total_branches == length_longest_path_) {
+  if (total_branches > length_longest_path_) {
+    length_longest_path_ = total_branches;
+    num_longest_path_ = 1;
+    // TODO: Leaks memory!
+    longest_paths_.clear();
+    longest_paths_.push_back(new SymbolicPath(path));
+
+  } else if (total_branches == length_longest_path_) {
     num_longest_path_++;
     longest_paths_.push_back(new SymbolicPath(path));
   }
 
+  /*
   for (BranchIt i = branches.begin(); i != branches.end(); ++i) {
     if ((*i > 0) && !covered_[*i]) {
       covered_[*i] = true;
@@ -267,6 +273,7 @@ bool Search::UpdateCoverage(const SymbolicExecution& ex,
       total_num_covered_++;
     }
   }
+  */
 
   fprintf(stderr, "Iteration %d (%lds): covered %u branches [%u reach funs, %u reach branches].\n",
 	  num_iters_, time(NULL)-start_time_, total_num_covered_, reachable_functions_, reachable_branches_);
@@ -380,7 +387,7 @@ bool Search::CheckPrediction(const SymbolicExecution& old_ex,
      }
    }
    return (new_ex.path().branches()[branch_idx]
-           == paired_branch_[old_ex.path().branches()[branch_idx]]);
+           != old_ex.path().branches()[branch_idx]);
 }
 
 
