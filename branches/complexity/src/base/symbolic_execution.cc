@@ -46,6 +46,9 @@ bool SymbolicExecution::Parse(istream& s) {
   // Read the inputs.
   size_t len;
   s.read((char*)&len, sizeof(len));
+  if (s.fail()) return false;
+  assert(len >= 0);
+
   vars_.clear();
   inputs_.resize(len);
   for (size_t i = 0; i < len; i++) {

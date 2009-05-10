@@ -59,6 +59,10 @@ SymbolicExpr* SymbolicExpr::NewConcreteExpr(type_t ty, value_t val) {
   return new SymbolicExpr(kSizeOfType[ty], val);
 }
 
+SymbolicExpr* SymbolicExpr::NewConcreteExpr(size_t size, value_t val) {
+  return new SymbolicExpr(size, val);
+}
+
 SymbolicExpr* SymbolicExpr::NewUnaryExpr(type_t ty, value_t val,
                                          ops::unary_op_t op, SymbolicExpr* e) {
   return new UnaryExpr(op, e, kSizeOfType[ty], val);
@@ -153,50 +157,60 @@ SymbolicExpr* SymbolicExpr::ExtractBytes(SymbolicExpr* e, size_t i, size_t n) {
 
 
 SymbolicExpr* SymbolicExpr::Parse(istream& s) {
-  value_t* val = new value_t(sizeof(value_t));
-  size_t* siz = new size_t(sizeof(size_t));
-  var_t* var = new var_t(sizeof(var_t));
-  SymbolicExpr *left = NULL, *right = NULL, *child=NULL;
-  compare_op_t cmp_op_ = ops::EQ;
-  binary_op_t bin_op_ = ops::ADD;
-  unary_op_t un_op_ = ops::NEGATE;
+  value_t val;
+  size_t size;
+  var_t var;
 
-  SymbolicObject *obj = NULL;
-  SymbolicExpr *addr = NULL;
-  unsigned char* bytes = NULL;
+  SymbolicExpr *left, *right, *child;
+  compare_op_t cmp_op_;
+  binary_op_t bin_op_;
+  unary_op_t un_op_;
 
-  s.read((char *)val, sizeof(value_t));
-	  if(s.fail()) return NULL;
-  s.read((char *)siz, sizeof(size_t));
-	  if(s.fail()) return NULL;
+  SymbolicObject *obj;
+  SymbolicExpr *addr;
+  unsigned char* bytes;
+
+  s.read((char*)&val, sizeof(value_t));
+  if (s.fail()) return NULL;
+  s.read((char*)&size, sizeof(size_t));
+  if (s.fail()) return NULL;
 
   char type_ = s.get();
   switch(type_) {
 
   case kBasicNodeTag:
-	  s.read((char*)var, sizeof(var_t));
-	  if(s.fail()) return NULL;
-	  return new BasicExpr(*siz, *val, *var);
+    s.read((char*)&var, sizeof(var_t));
+    if(s.fail()) return NULL;
+    return new BasicExpr(size, val, var);
 
   case kCompareNodeTag:
-	  cmp_op_ = (compare_op_t)s.get();
-	  if(s.fail()) return NULL;
-	  left = Parse(s);
-	  right = Parse(s);
-	  return new CompareExpr(cmp_op_, left, right, *siz, *val);
+    cmp_op_ = (compare_op_t)s.get();
+    if (s.fail()) return NULL;
+    left = Parse(s);
+    right = Parse(s);
+    if (!left || !right) {
+      // TODO: Leaks memory.
+      return NULL;
+    }
+    return new CompareExpr(cmp_op_, left, right, size, val);
 
   case kBinaryNodeTag:
-	  bin_op_ = (binary_op_t)s.get();
-	  if(s.fail()) return NULL;
-	  left = Parse(s);
-	  right = Parse(s);
-	  return new BinaryExpr(bin_op_, left, right, *siz, *val);
+    bin_op_ = (binary_op_t)s.get();
+    if (s.fail()) return NULL;
+    left = Parse(s);
+    right = Parse(s);
+    if (!left || !right) {
+      // TODO: Leaks memory.
+      return NULL;
+    }
+    return new BinaryExpr(bin_op_, left, right, size, val);
 
   case kUnaryNodeTag:
-	  un_op_ = (unary_op_t)s.get();
-	  if(s.fail()) return NULL;
-	  child = Parse(s);
-	  return new UnaryExpr(un_op_, child, *siz, *val);
+    un_op_ = (unary_op_t)s.get();
+    if (s.fail()) return NULL;
+    child = Parse(s);
+    if (child == NULL) return NULL;
+    return new UnaryExpr(un_op_, child, size, val);
 
   case kDerefNodeTag:
     obj = SymbolicObject::Parse(s);
@@ -216,14 +230,14 @@ SymbolicExpr* SymbolicExpr::Parse(istream& s) {
       delete bytes;
       return NULL;
     }
-    return new DerefExpr(addr, obj, bytes, *siz, *val);
+    return new DerefExpr(addr, obj, bytes, size, val);
 
   case kConstNodeTag:
-	  return new SymbolicExpr(*siz, *val);
+    return new SymbolicExpr(size, val);
 
   default:
-	  fprintf(stderr, "Unknown type of node: '%c'....exiting\n", type_);
-	  exit(1);
+    fprintf(stderr, "Unknown type of node: '%c'....exiting\n", type_);
+    exit(1);
   }
 }
 

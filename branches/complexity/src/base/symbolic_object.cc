@@ -99,6 +99,7 @@ SymbolicObject* SymbolicObject::Parse(istream& s) {
   s.read((char*)&start, sizeof(start));
   s.read((char*)&size, sizeof(size));
   if (s.fail()) return false;
+  assert(start + size > start);
 
   SymbolicObject* obj = new SymbolicObject(start, size);
   if (obj->ParseInternal(s)) {
@@ -113,6 +114,7 @@ SymbolicObject* SymbolicObject::Parse(istream& s) {
 
 bool SymbolicObject::ParseInternal(istream& s) {
   // Assumption: This object is empty, so we do not have to clear it out.
+  assert(writes_.size() == 0);
   return mem_.Parse(s);
 }
 

@@ -84,6 +84,9 @@ bool SymbolicPath::Parse(istream& s) {
 
   // Read the path.
   s.read((char*)&len, sizeof(size_t));
+  if (s.fail()) return false;
+  assert(len >= 0);
+
   branches_.resize(len);
   s.read((char*)&branches_.front(), len * sizeof(branch_id_t));
   if (s.fail())
@@ -95,6 +98,9 @@ bool SymbolicPath::Parse(istream& s) {
 
   // Read the path constraints.
   s.read((char*)&len, sizeof(size_t));
+  if (s.fail()) return false;
+  assert(len >= 0);
+
   constraints_idx_.resize(len);
   constraints_.resize(len);
   s.read((char*)&constraints_idx_.front(), len * sizeof(size_t));
