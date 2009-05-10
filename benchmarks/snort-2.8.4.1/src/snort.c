@@ -409,6 +409,8 @@ int main(int argc, char* argv[])
     return SnortMain(argc,argv);
 }
 
+extern void __CrestInit(int);
+
 /*
  *
  * Function: SnortMain(int, char *)
@@ -423,6 +425,8 @@ int main(int argc, char* argv[])
  */
 int SnortMain(int argc, char *argv[])
 {
+  __CrestInit(0);
+
 #ifndef WIN32
 #if defined(LINUX) || defined(FREEBSD) || defined(OPENBSD) || defined(SOLARIS) || defined(BSD) || defined(MACOS)
     sigset_t set;
@@ -589,14 +593,14 @@ int SnortMain(int argc, char *argv[])
     pv.mpls_multicast = DEFAULT_MPLS_MULTICAST;
     pv.mpls_stack_depth = DEFAULT_LABELCHAIN_LENGTH;
 #endif
-    
+
     /* chew up the command line */
     ParseCmdLine(argc, argv);
 
     /* If we are running non-root, install a dummy handler instead. */
     if (userid != 0)
         signal(SIGHUP, SigCantHupHandler);
-    
+
     /* determine what run mode we are going to be in */
     if(pv.test_mode_flag)
     {
@@ -811,7 +815,7 @@ int SnortMain(int argc, char *argv[])
      * (even if just in read mode)
      */
     if (!pv.readmode_flag && (runMode != MODE_VERSION))
-        DefineAllIfaceVars();
+      DefineAllIfaceVars();
 
     /* if we're using the rules system, it gets initialized here */
     if(runMode == MODE_IDS || runMode == MODE_RULE_DUMP || runMode == MODE_VERSION)
@@ -1002,7 +1006,7 @@ int SnortMain(int argc, char *argv[])
     /* If PCAP is not initialized (or closed prior to daemonizing),
      * do it here... */
     if (!pd)
-        InitPcap( 0 );
+      InitPcap( 0 );
 
     DEBUG_WRAP(DebugMessage(DEBUG_INIT, "Setting Packet Processor\n"););
 
@@ -1207,7 +1211,23 @@ int SnortMain(int argc, char *argv[])
 
         DEBUG_WRAP(DebugMessage(DEBUG_INIT, "Entering pcap loop\n"););
 
-        InterfaceThread(NULL);
+        struct timezone tz;
+        bzero((char *) &tz, sizeof(tz));
+
+        // Construct a fake packet.
+        struct pcap_pkthdr pkthdr;
+        gettimeofday(&pkthdr.ts, &tz);
+        pkthdr.caplen = 576;
+        pkthdr.len = 576;
+
+        u_char* pkt = (u_char*)malloc(4096);
+        // Packet is garbage . . . .
+
+        // Process it.
+        ProcessPacket(NULL, &pkthdr, pkt, NULL);
+
+        // Done.
+        exit(0);
 
 #ifdef GIDS
     }
@@ -3991,7 +4011,6 @@ int OpenPcap()
     bpf_u_int32 defaultnet = 0xFFFFFF00;
     static char first_pcap = 1;           /* for backwards compatibility only show first pcap */
     int ret;
-
 
     errorbuf[0] = '\0';
 
