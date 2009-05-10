@@ -74,7 +74,14 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
     break;
   case ops::S_SHIFT_R:
     // Assumption: right_ is concrete.
-    return yices_mk_bv_shift_right1(ctx, e1, right_->value());
+    // To do an arithmetic shift:
+    //  (1) Sign extend by the amount to shift.
+    //  (2) Extract all but the lower-order bits.
+    e1 = yices_mk_bv_sign_extend(ctx, e1, right_->value());
+    return yices_mk_bv_extract(ctx,
+                               8*left_->size() + right_->value() - 1,
+                               right_->value(),
+                               e1);
     break;
   case ops::BITWISE_AND:
     return yices_mk_bv_and(ctx, e1, e2);
@@ -88,7 +95,7 @@ yices_expr BinaryExpr::BitBlast(yices_context ctx) const {
     // Extract the i-th, i+1-th, ..., i+size()-th least significant bytes.
     // (Assumption: right_ is concrete.)
     start = 8 * right_->value();
-    end = start + 8*size();
+    end = start + 8*size() - 1;
     return yices_mk_bv_extract(ctx, end, start, e1);
   default:
     fprintf(stderr, "Unknown/unhandled binary operator: %d\n", binary_op_);
