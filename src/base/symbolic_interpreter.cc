@@ -30,6 +30,8 @@ using std::vector;
 #define IFDEBUG(x)
 #endif
 
+#define IFDEBUG2(x)
+
 namespace crest {
 
 typedef map<addr_t,SymbolicExpr*>::const_iterator ConstMemIt;
@@ -79,13 +81,23 @@ void SymbolicInterpreter::Load(id_t id, addr_t addr, type_t ty, value_t value) {
   IFDEBUG(fprintf(stderr, "load %lu %lld\n", addr, value));
 
   SymbolicObject* obj = obj_tracker_.find(addr);
+  SymbolicExpr* e = NULL;
   if (obj == NULL) {
     // Load from main memory.
-    PushSymbolic(mem_.read(addr, ty, value), ty, value);
+    e = mem_.read(addr, ty, value);
   } else {
     // Load from a symbolic object.
-    PushSymbolic(obj->read(addr, ty, value), ty, value);
+    e = obj->read(addr, ty, value);
   }
+
+  IFDEBUG2({
+      if (e) {
+        string s;
+        e->AppendToString(&s);
+        fprintf(stderr, "load %lu %lld : %s\n", addr, value, s.c_str());
+      }})
+
+  PushSymbolic(e, ty, value);
 
   IFDEBUG(DumpMemory());
 }
@@ -118,6 +130,14 @@ void SymbolicInterpreter::Deref(id_t id, addr_t addr, type_t ty, value_t value) 
     }
   }
 
+  IFDEBUG2({
+      if (e) {
+        string s;
+        e->AppendToString(&s);
+        fprintf(stderr, "deref %lu %lld : %s\n", addr, value, s.c_str());
+      }})
+
+
   PushSymbolic(e, ty, value);
 
   IFDEBUG(DumpMemory());
@@ -129,6 +149,13 @@ void SymbolicInterpreter::Store(id_t id, addr_t addr) {
   assert(stack_.size() > 0);
 
   const StackElem& se = stack_.back();
+
+  IFDEBUG2({
+      if (se.expr) {
+        string s;
+        se.expr->AppendToString(&s);
+        fprintf(stderr, "store %lu : %s\n", addr, s.c_str());
+      }})
 
   // Is this a write to an object?
   SymbolicObject* obj = obj_tracker_.find(addr);
@@ -160,6 +187,13 @@ void SymbolicInterpreter::Write(id_t id, addr_t addr) {
 
   const StackElem& dest = *(stack_.rbegin()+1);
   const StackElem& val = stack_.back();
+
+  IFDEBUG2({
+      if (val.expr) {
+        string s;
+        val.expr->AppendToString(&s);
+        fprintf(stderr, "store %lu : %s\n", addr, s.c_str());
+      }})
 
   // Is this a write to an object.
   SymbolicObject* obj = obj_tracker_.find(addr);
@@ -357,10 +391,26 @@ void SymbolicInterpreter::Branch(id_t id, branch_id_t bid, bool pred_value) {
   assert(stack_.size() == 1);
   StackElem& se = stack_.back();
 
-  // If necessary, negate the expression.
-  if (se.expr && !pred_value) {
-    se.expr = SymbolicExpr::NewUnaryExpr(types::INT, !pred_value,
-                                         ops::LOGICAL_NOT, se.expr);
+  if (se.expr) {
+    if (se.expr->CastCompareExpr()) {
+      // If necessary, negate the expression.
+      if (!pred_value) {
+        se.expr = SymbolicExpr::NewUnaryExpr(types::INT, !pred_value,
+                                             ops::LOGICAL_NOT, se.expr);
+      }
+
+    } else {
+      // Need to create a comparison.
+      if (pred_value) {
+        SymbolicExpr* zero = SymbolicExpr::NewConcreteExpr(se.expr->size(), 0);
+        se.expr = SymbolicExpr::NewCompareExpr(types::INT, 1,
+                                               ops::NEQ, se.expr, zero);
+      } else {
+        SymbolicExpr* zero = SymbolicExpr::NewConcreteExpr(se.expr->size(), 0);
+        se.expr = SymbolicExpr::NewCompareExpr(types::INT, 1,
+                                               ops::EQ, se.expr, zero);
+      }
+    }
   }
 
   ex_.mutable_path()->Push(bid, se.expr);
