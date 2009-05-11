@@ -40,6 +40,8 @@
 #include "config.h"
 #endif
 
+#include <crest.h>
+
 #include <errno.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -409,8 +411,6 @@ int main(int argc, char* argv[])
     return SnortMain(argc,argv);
 }
 
-extern void __CrestInit(int);
-
 /*
  *
  * Function: SnortMain(int, char *)
@@ -425,20 +425,18 @@ extern void __CrestInit(int);
  */
 int SnortMain(int argc, char *argv[])
 {
-  __CrestInit(0);
-
 #ifndef WIN32
 #if defined(LINUX) || defined(FREEBSD) || defined(OPENBSD) || defined(SOLARIS) || defined(BSD) || defined(MACOS)
     sigset_t set;
 
-    sigemptyset(&set);
+    // sigemptyset(&set);
 #if defined(HAVE_LIBPRELUDE) || defined(INLINE_FAILOPEN)
-    pthread_sigmask(SIG_SETMASK, &set, NULL);
+    // pthread_sigmask(SIG_SETMASK, &set, NULL);
 #else
-    sigprocmask(SIG_SETMASK, &set, NULL);
+    // sigprocmask(SIG_SETMASK, &set, NULL);
 #endif /* HAVE_LIBPRELUDE || INLINE_FAILOPEN */
 #else
-    sigsetmask(0);
+      // sigsetmask(0);
 #endif /* LINUX, BSD, SOLARIS */
 #endif  /* !WIN32 */
 
@@ -447,18 +445,20 @@ int SnortMain(int argc, char *argv[])
      * set errno for some.  Ignore/reset this error so it
      * doesn't interfere with later checks of errno value.
      */
+    /*
     signal(SIGTERM, SigTermHandler);    if(errno!=0) errno=0;
     signal(SIGINT, SigIntHandler);      if(errno!=0) errno=0;
     signal(SIGQUIT, SigQuitHandler);    if(errno!=0) errno=0;
     signal(SIGHUP, SigHupHandler);      if(errno!=0) errno=0;
     signal(SIGUSR1, SigUsrHandler);    if(errno!=0) errno=0;
-   
+
     signal(SIGNAL_SNORT_ROTATE_STATS, SigUsrHandler);
                                         if(errno!=0) errno=0;
+    */
 
 #ifdef CATCH_SEGV
-    signal(SIGSEGV,SigSegvHandler);  if(errno!=0) errno=0;
-    signal(SIGFPE, SigSegvHandler);  if(errno!=0) errno=0;
+    // signal(SIGSEGV,SigSegvHandler);  if(errno!=0) errno=0;
+    // signal(SIGFPE, SigSegvHandler);  if(errno!=0) errno=0;
 #else
 #ifdef NOCOREFILE
     {
@@ -1208,6 +1208,8 @@ int SnortMain(int argc, char *argv[])
     else
     {
 #endif /* GIDS */
+      {
+        int i;
 
         DEBUG_WRAP(DebugMessage(DEBUG_INIT, "Entering pcap loop\n"););
 
@@ -1221,13 +1223,15 @@ int SnortMain(int argc, char *argv[])
         pkthdr.len = 576;
 
         u_char* pkt = (u_char*)malloc(4096);
-        // Packet is garbage . . . .
+        for (i = 0; i < 576; i++)
+          CREST_unsigned_char(pkt[i]);
 
         // Process it.
         ProcessPacket(NULL, &pkthdr, pkt, NULL);
 
         // Done.
         exit(0);
+      }
 
 #ifdef GIDS
     }
