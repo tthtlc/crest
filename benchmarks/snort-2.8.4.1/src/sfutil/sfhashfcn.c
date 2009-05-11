@@ -50,7 +50,7 @@ SFHASHFCN * sfhashfcn_new( int m )
   }
 
   // This can make all of the hashing static for testing.
-  //#define rand() 0
+#define rand() 0
    
   p = (SFHASHFCN*) calloc( 1,sizeof(SFHASHFCN) );
   if( !p )
