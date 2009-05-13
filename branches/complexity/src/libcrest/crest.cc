@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <fstream>
+#include <malloc.h>
 #include <string>
 #include <vector>
 
@@ -20,7 +21,7 @@ using std::vector;
 using namespace crest;
 
 // The symbolic interpreter.
-static SymbolicInterpreter* SI;
+static SymbolicInterpreter* SI = NULL;
 
 // Have we read an input yet?  Until we have, generate only the
 // minimal instrumentation necessary to track which branches were
@@ -106,7 +107,9 @@ static void crest_init_hook(void) {
 static void* crest_malloc_hook (size_t size, const void* caller) {
   restore_original_hooks();
   void* result = malloc (size);
-  // TODO: Record allocation.
+  if (SI && result) {
+    SI->Alloc(-1, (__CREST_ADDR)result, size);
+  }
   save_original_hooks();
   install_crest_hooks();
   return result;
@@ -115,7 +118,12 @@ static void* crest_malloc_hook (size_t size, const void* caller) {
 static void* crest_realloc_hook(void* p, size_t size, const void* caller) {
   restore_original_hooks();
   void* result = realloc(p, size);
-  // TODO: Record free and allocation.
+  if (SI) {
+    SI->Free(-1, (__CREST_ADDR)p);
+    if (result) {
+      SI->Alloc(-1, (__CREST_ADDR)result, size);
+    }
+  }
   save_original_hooks();
   install_crest_hooks();
   return result;
@@ -123,8 +131,11 @@ static void* crest_realloc_hook(void* p, size_t size, const void* caller) {
 
 static void crest_free_hook (void* p, const void* caller) {
   restore_original_hooks();
-  free(p);
   // Record free.
+  if (SI) {
+    SI->Free(-1, (__CREST_ADDR)p);
+  }
+  free(p);
   save_original_hooks();
   install_crest_hooks();
 }
@@ -133,6 +144,9 @@ static void* crest_memalign_hook(size_t align, size_t size, const void* caller) 
   restore_original_hooks();
   void* result = memalign(align, size);
   // Record allocation.
+  if (SI && result) {
+    SI->Alloc(-1, (__CREST_ADDR)result, size);
+  }
   save_original_hooks();
   install_crest_hooks();
   return result;
