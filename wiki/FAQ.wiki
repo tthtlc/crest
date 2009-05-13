@@ -11,6 +11,7 @@ First, `addr_t` cannot be used as a typedef under Cygwin, so all uses of `addr_t
 sed -i -e 's/addr_t/addr2_t/g' src/*/*
 }}} 
 
+Some users have reported that `id_t` must also be renamed.
 
 Second, there is no separate `rt` library under Cygwin, so `-lrt` must be removed from `LOADLIBeS` in `src/Makefile`:
 {{{
