@@ -25,9 +25,12 @@ class ObjectTracker {
   ~ObjectTracker();
 
   void add(addr_t addr, size_t size);
+  void remove(addr_t addr);
+
   SymbolicObject* find(addr_t addr) const;
 
-  // TODO: Method for removing/de-allocating objects.
+  // For debugging.
+  void Dump() const;
 
  private:
   std::map<addr_t,SymbolicObject*> objs_;

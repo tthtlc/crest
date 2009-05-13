@@ -16,7 +16,8 @@ using std::map;
 
 namespace crest {
 
-typedef map<addr_t,SymbolicObject*>::const_iterator EntryIt;
+typedef map<addr_t,SymbolicObject*>::iterator EntryIt;
+typedef map<addr_t,SymbolicObject*>::const_iterator ConstEntryIt;
 
 ObjectTracker::~ObjectTracker() {
   for (EntryIt i = objs_.begin(); i != objs_.end(); ++i) {
@@ -29,8 +30,20 @@ void ObjectTracker::add(addr_t addr, size_t size) {
   objs_[addr + size] = new SymbolicObject(addr, size);
 }
 
-SymbolicObject* ObjectTracker::find(addr_t addr) const {
+void ObjectTracker::remove(addr_t addr) {
   EntryIt i = objs_.upper_bound(addr);
+
+  if (i == objs_.end())
+    return;
+
+  if (i->second->start() != addr)
+    return;
+
+  objs_.erase(i);
+}
+
+SymbolicObject* ObjectTracker::find(addr_t addr) const {
+  ConstEntryIt i = objs_.upper_bound(addr);
 
   if (i == objs_.end())
     return NULL;
@@ -39,6 +52,14 @@ SymbolicObject* ObjectTracker::find(addr_t addr) const {
     return i->second;
 
   return NULL;
+}
+
+
+void ObjectTracker::Dump() const {
+  for (ConstEntryIt i = objs_.begin(); i != objs_.end(); ++i) {
+    fprintf(stderr, "Object [%lu,%lu] --\n", i->second->start(), i->first);
+    i->second->Dump();
+  }
 }
 
 }  // namespace crest
