@@ -51,6 +51,7 @@ SymbolicInterpreter::SymbolicInterpreter(const vector<value_t>& input)
 void SymbolicInterpreter::DumpMemory() {
   fprintf(stderr, "\n");
   mem_.Dump();
+  obj_tracker_.Dump();
 
   for (size_t i = 0; i < stack_.size(); i++) {
     string s;
@@ -313,8 +314,19 @@ void SymbolicInterpreter::ApplyBinPtrOp(id_t id, pointer_op_t op,
     }
 
     // If the operation is pointer-pointer subtraction, scale the result.
-    if (op == ops::SUBTRACT_PP) {
-      a.expr = SymbolicExpr::NewBinaryExpr(ty, value, ops::S_DIV, a.expr, size);
+    if ((op == ops::SUBTRACT_PP) && (size > 1)) {
+      // Currently only works for powers of 2.
+      size_t log2 = 0;
+      while ((size & 1) == 0) {
+        log2++;
+        size >>= 1;
+      }
+      assert(size == 1);
+
+      // TODO: Invert the remainder (module the correct power of two),
+      // so that we can use multiplication instead of division.
+
+      a.expr = SymbolicExpr::NewBinaryExpr(ty, value, ops::S_SHIFT_R, a.expr, log2);
     }
 
   } else {
@@ -425,6 +437,11 @@ void SymbolicInterpreter::Alloc(id_t id, addr_t addr, size_t size) {
 }
 
 
+void SymbolicInterpreter::Free(id_t id, addr_t addr) {
+  obj_tracker_.remove(addr);
+}
+
+
 value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
   assert(ty != types::STRUCT);
   ex_.mutable_vars()->insert(make_pair(num_inputs_, ty));
@@ -439,7 +456,14 @@ value_t SymbolicInterpreter::NewInput(type_t ty, addr_t addr) {
     ex_.mutable_inputs()->push_back(0);
   }
 
-  mem_.write(addr, new BasicExpr(size, val, num_inputs_));
+  // Is this a write to an object?
+  SymbolicObject* obj = obj_tracker_.find(addr);
+  if (obj != NULL) {
+    obj->write(NULL, addr, new BasicExpr(size, val, num_inputs_));
+  } else {
+    // Write to untracked region/object.
+    mem_.write(addr, new BasicExpr(size, val, num_inputs_));
+  }
 
   num_inputs_++;
   return val;

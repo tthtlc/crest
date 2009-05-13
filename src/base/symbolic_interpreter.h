@@ -54,6 +54,7 @@ class SymbolicInterpreter {
   void Branch(id_t id, branch_id_t bid, bool pred_value);
 
   void Alloc(id_t id, addr_t addr, size_t size);
+  void Free(id_t id, addr_t addr);
 
   value_t NewInput(type_t ty, addr_t addr);
 
