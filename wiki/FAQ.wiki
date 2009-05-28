@@ -15,7 +15,43 @@ Some users have reported that `id_t` must also be renamed.
 
 Second, there is no separate `rt` library under Cygwin, so `-lrt` must be removed from `LOADLIBeS` in `src/Makefile`:
 {{{
-8c8
+< LOADLIBES = -lyices -lrt
+---
+> LOADLIBES = -lyices
+}}}
+
+=== ===
+
+=== ===
+
+=== ===
+
+== Can CREST be used under Mac OS X? ==
+
+(Thanks to user andrewhc for this tip.)
+
+Yes, but a few small changes are necessary to build CREST under Mac OS X.
+
+First, to build CIL, every instance of "`echo -n`" in CIL's Makefile must be replaced with "`echo`".  (This may no longer be necessary with the latest version of CIL.)
+
+Second, in `src/run_crest/run_crest.cc`, change "`#include <time.h>`" to "`#include <sys/time.h>`" and change:
+{{{
+// Initialize the random number generator.
+#if 1
+    struct timespec ts;
+    ...
+}}}
+to
+{{{
+// Initialize the random number generator.
+#if 0
+    struct timespec ts;
+    ...
+}}}
+(Change the '#if 1' to '#if 0') 
+
+Finally, there is no separate `rt` library under Mac OS X, so `-lrt` must be removed from `LOADLIBES` in `src/Makefile`:
+{{{
 < LOADLIBES = -lyices -lrt
 ---
 > LOADLIBES = -lyices
