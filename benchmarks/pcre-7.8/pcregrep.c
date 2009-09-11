@@ -17,13 +17,13 @@
 
 const int OVECCOUNT = 30;
 
-/*
+
 size_t my_strlen(char* s) {
   char* p = s;
   while (*p) p++;
   return (p - s);
 }
-*/
+
 
 int main(int argc, char* argv[]) {
   const char* error;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
   // Execute the regular expression.
   rc = pcre_exec(re, NULL,
-                 subject, N, // my_strlen(subject),
+                 subject, N,//my_strlen(subject),
                  0, 0, ovector, OVECCOUNT);
 
   printf("%d: %s\n", rc, subject);
