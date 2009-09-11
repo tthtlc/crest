@@ -37,7 +37,7 @@ POST_UNINSTALL = :
 build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
 TESTS = $(am__EXEEXT_2) RunTest RunGrepTest
-bin_PROGRAMS = pcretest$(EXEEXT) pcresudeep$(EXEEXT)
+bin_PROGRAMS = pcresudeep$(EXEEXT)
 noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 
 # These additional headers will be be installed if C++ support is enabled. We
@@ -165,7 +165,7 @@ pcresudeep_OBJECTS = $(am_pcresudeep_OBJECTS)
 pcresudeep_DEPENDENCIES = libpcreposix.la
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(bin_SCRIPTS) $(dist_noinst_SCRIPTS)
-DEFAULT_INCLUDES = -I.
+DEFAULT_INCLUDES = -I. -I/home/sudeep/workspace/klee/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -783,7 +783,6 @@ include ./$(DEPDIR)/pcrecpp_unittest.Po
 include ./$(DEPDIR)/pcregrep.Po
 include ./$(DEPDIR)/pcreposix.Plo
 include ./$(DEPDIR)/pcretest.Po
-include ./$(DEPDIR)/pcresudeep.Po
 
 .c.o:
 	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
