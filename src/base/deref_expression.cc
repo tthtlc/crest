@@ -89,7 +89,7 @@ yices_expr DerefExpr::BitBlast(yices_context ctx) const {
 
   //Naming the uninterpreted function
   char c[32];
-  sprintf(c, "f%d",(int)this);
+  sprintf(c, "f%d",this);
 
   //Bit-blast the address
   yices_expr args_yices_f[1] = { addr_->BitBlast(ctx) };
