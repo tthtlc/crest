@@ -9,6 +9,7 @@
 // for details.
 
 #include "base/symbolic_path.h"
+#include<assert.h>
 
 namespace crest {
 
