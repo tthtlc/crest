@@ -51,6 +51,7 @@ possible. There are also some static supporting functions. */
 #define PSEND   end_subject    /* Field containing processed string end */
 
 #include "pcre_internal.h"
+#include<assert.h>
 
 /* Undefine some potentially clashing cpp symbols */
 
@@ -646,29 +647,29 @@ for (;;)
 
   switch(op)
     {
-    case OP_FAIL:
+    case OP_FAIL: assert(FALSE);
     RRETURN(MATCH_NOMATCH);
 
-    case OP_PRUNE:
+    case OP_PRUNE: assert(FALSE);
     RMATCH(eptr, ecode + _pcre_OP_lengths[*ecode], offset_top, md,
       ims, eptrb, flags, RM51);
     if (rrc != MATCH_NOMATCH) RRETURN(rrc);
     RRETURN(MATCH_PRUNE);
 
-    case OP_COMMIT:
+    case OP_COMMIT: assert(FALSE);
     RMATCH(eptr, ecode + _pcre_OP_lengths[*ecode], offset_top, md,
       ims, eptrb, flags, RM52);
     if (rrc != MATCH_NOMATCH) RRETURN(rrc);
     RRETURN(MATCH_COMMIT);
 
-    case OP_SKIP:
+    case OP_SKIP: assert(FALSE);
     RMATCH(eptr, ecode + _pcre_OP_lengths[*ecode], offset_top, md,
       ims, eptrb, flags, RM53);
     if (rrc != MATCH_NOMATCH) RRETURN(rrc);
     md->start_match_ptr = eptr;   /* Pass back current position */
     RRETURN(MATCH_SKIP);
 
-    case OP_THEN:
+    case OP_THEN: assert(FALSE);
     RMATCH(eptr, ecode + _pcre_OP_lengths[*ecode], offset_top, md,
       ims, eptrb, flags, RM54);
     if (rrc != MATCH_NOMATCH) RRETURN(rrc);
@@ -688,8 +689,8 @@ for (;;)
     a non-capturing bracket. Don't worry about setting the flag for the error
     case here; that is handled in the code for KET. */
 
-    case OP_CBRA:
-    case OP_SCBRA:
+    case OP_CBRA:  
+    case OP_SCBRA: 
     number = GET2(ecode, 1+LINK_SIZE);
     offset = number << 1;
 
@@ -747,8 +748,8 @@ for (;;)
     turning this into a tail recursion, except in the case when match_cbegroup
     is set.*/
 
-    case OP_BRA:
-    case OP_SBRA:
+    case OP_BRA: 
+    case OP_SBRA: 
     DPRINTF(("start non-capturing bracket\n"));
     flags = (op >= OP_SBRA)? match_cbegroup : 0;
     for (;;)
@@ -780,13 +781,13 @@ for (;;)
     /* Control never reaches here. */
 
     /* Conditional group: compilation checked that there are no more than
-    two branches. If the condition is false, skipping the first branch takes us
+    two branches. If the condition is FALSE, skipping the first branch takes us
     past the end if there is only one branch, but that's OK because that is
     exactly what going to the ket would do. As there is only one branch to be
     obeyed, we can use tail recursion to avoid using another stack frame. */
 
-    case OP_COND:
-    case OP_SCOND:
+    case OP_COND: assert(FALSE);
+    case OP_SCOND: assert(FALSE);
     if (ecode[LINK_SIZE+1] == OP_RREF)         /* Recursion test */
       {
       offset = GET2(ecode, LINK_SIZE + 2);     /* Recursion group number*/
@@ -802,7 +803,7 @@ for (;;)
       ecode += condition? 3 : GET(ecode, 1);
       }
 
-    else if (ecode[LINK_SIZE+1] == OP_DEF)     /* DEFINE - always false */
+    else if (ecode[LINK_SIZE+1] == OP_DEF)     /* DEFINE - always FALSE */
       {
       condition = FALSE;
       ecode += GET(ecode, 1);
@@ -852,7 +853,7 @@ for (;;)
         goto TAIL_RECURSE;
         }
       }
-    else                         /* Condition false & no 2nd alternative */
+    else                         /* Condition FALSE & no 2nd alternative */
       {
       ecode += 1 + LINK_SIZE;
       }
@@ -863,8 +864,8 @@ for (;;)
     recursion, we should restore the offsets appropriately and continue from
     after the call. */
 
-    case OP_ACCEPT:
-    case OP_END:
+    case OP_ACCEPT: assert(FALSE);
+    case OP_END: assert(FALSE);
     if (md->recursive != NULL && md->recursive->group_num == 0)
       {
       recursion_info *rec = md->recursive;
@@ -889,7 +890,7 @@ for (;;)
 
     /* Change option settings */
 
-    case OP_OPT:
+    case OP_OPT: assert(FALSE);
     ims = ecode[1];
     ecode += 2;
     DPRINTF(("ims set to %02lx\n", ims));
@@ -901,8 +902,8 @@ for (;;)
     start of each branch to move the current point backwards, so the code at
     this level is identical to the lookahead case. */
 
-    case OP_ASSERT:
-    case OP_ASSERTBACK:
+    case OP_ASSERT: assert(FALSE);
+    case OP_ASSERTBACK: assert(FALSE);
     do
       {
       RMATCH(eptr, ecode + 1 + LINK_SIZE, offset_top, md, ims, NULL, 0,
@@ -928,8 +929,8 @@ for (;;)
 
     /* Negative assertion: all branches must fail to match */
 
-    case OP_ASSERT_NOT:
-    case OP_ASSERTBACK_NOT:
+    case OP_ASSERT_NOT: assert(FALSE);
+    case OP_ASSERTBACK_NOT: assert(FALSE);
     do
       {
       RMATCH(eptr, ecode + 1 + LINK_SIZE, offset_top, md, ims, NULL, 0,
@@ -950,7 +951,7 @@ for (;;)
     move back, this match function fails. When working with UTF-8 we move
     back a number of characters, not bytes. */
 
-    case OP_REVERSE:
+    case OP_REVERSE: assert(FALSE);
 #ifdef SUPPORT_UTF8
     if (utf8)
       {
@@ -981,7 +982,7 @@ for (;;)
     details of the match so far. This is mainly for debugging, though the
     function is able to force a failure. */
 
-    case OP_CALLOUT:
+    case OP_CALLOUT: assert(FALSE);
     if (pcre_callout != NULL)
       {
       pcre_callout_block cb;
@@ -1022,7 +1023,7 @@ for (;;)
     sequence of blocks that actually live on the stack. Thanks to Robin Houston
     for the original version of this logic. */
 
-    case OP_RECURSE:
+    case OP_RECURSE: assert(FALSE);
       {
       callpat = md->start_code + GET(ecode, 1);
       new_recursive.group_num = (callpat == md->start_code)? 0 :
@@ -1100,7 +1101,7 @@ for (;;)
     for this kind of subpattern. If any one branch matches, we carry on as at
     the end of a normal bracket, leaving the subject pointer. */
 
-    case OP_ONCE:
+    case OP_ONCE:assert(FALSE);
     prev = ecode;
     saved_eptr = eptr;
 
@@ -1170,7 +1171,7 @@ for (;;)
     /* An alternation is the end of a branch; scan along to find the end of the
     bracketed group and go to there. */
 
-    case OP_ALT:
+    case OP_ALT: assert(FALSE);
     do ecode += GET(ecode,1); while (*ecode == OP_ALT);
     break;
 
@@ -1180,7 +1181,7 @@ for (;;)
     with fixed upper repeat limits are compiled as a number of copies, with the
     optional ones preceded by BRAZERO or BRAMINZERO. */
 
-    case OP_BRAZERO:
+    case OP_BRAZERO: assert(FALSE);
       {
       next = ecode+1;
       RMATCH(eptr, next, offset_top, md, ims, eptrb, 0, RM10);
@@ -1190,7 +1191,7 @@ for (;;)
       }
     break;
 
-    case OP_BRAMINZERO:
+    case OP_BRAMINZERO: assert(FALSE);
       {
       next = ecode+1;
       do next += GET(next, 1); while (*next == OP_ALT);
@@ -1200,7 +1201,7 @@ for (;;)
       }
     break;
 
-    case OP_SKIPZERO:
+    case OP_SKIPZERO:assert(FALSE);
       {
       next = ecode+1;
       do next += GET(next,1); while (*next == OP_ALT);
@@ -1210,9 +1211,9 @@ for (;;)
 
     /* End of a group, repeated or non-repeating. */
 
-    case OP_KET:
-    case OP_KETRMIN:
-    case OP_KETRMAX:
+    case OP_KET:assert(FALSE);
+    case OP_KETRMIN:assert(FALSE);
+    case OP_KETRMAX:assert(FALSE);
     prev = ecode - GET(ecode, 1);
 
     /* If this was a group that remembered the subject start, in order to break
@@ -1330,7 +1331,7 @@ for (;;)
 
     /* Start of subject unless notbol, or after internal newline if multiline */
 
-    case OP_CIRC:
+    case OP_CIRC:assert(FALSE);
     if (md->notbol && eptr == md->start_subject) RRETURN(MATCH_NOMATCH);
     if ((ims & PCRE_MULTILINE) != 0)
       {
@@ -1344,21 +1345,21 @@ for (;;)
 
     /* Start of subject assertion */
 
-    case OP_SOD:
+    case OP_SOD:assert(FALSE);
     if (eptr != md->start_subject) RRETURN(MATCH_NOMATCH);
     ecode++;
     break;
 
     /* Start of match assertion */
 
-    case OP_SOM:
+    case OP_SOM:assert(FALSE);
     if (eptr != md->start_subject + md->start_offset) RRETURN(MATCH_NOMATCH);
     ecode++;
     break;
 
     /* Reset the start of match point */
 
-    case OP_SET_SOM:
+    case OP_SET_SOM:assert(FALSE);
     mstart = eptr;
     ecode++;
     break;
@@ -1366,7 +1367,7 @@ for (;;)
     /* Assert before internal newline if multiline, or before a terminating
     newline unless endonly is set, else end of subject unless noteol is set. */
 
-    case OP_DOLL:
+    case OP_DOLL:assert(FALSE);
     if ((ims & PCRE_MULTILINE) != 0)
       {
       if (eptr < md->end_subject)
@@ -1392,14 +1393,14 @@ for (;;)
 
     /* End of subject assertion (\z) */
 
-    case OP_EOD:
+    case OP_EOD:assert(FALSE);
     if (eptr < md->end_subject) RRETURN(MATCH_NOMATCH);
     ecode++;
     break;
 
     /* End of subject or ending \n assertion (\Z) */
 
-    case OP_EODN:
+    case OP_EODN:assert(FALSE);
     if (eptr != md->end_subject &&
         (!IS_NEWLINE(eptr) || eptr != md->end_subject - md->nllen))
       RRETURN(MATCH_NOMATCH);
@@ -1408,8 +1409,8 @@ for (;;)
 
     /* Word boundary assertions */
 
-    case OP_NOT_WORD_BOUNDARY:
-    case OP_WORD_BOUNDARY:
+    case OP_NOT_WORD_BOUNDARY:assert(FALSE);
+    case OP_WORD_BOUNDARY:assert(FALSE);
       {
 
       /* Find out if the previous and current characters are "word" characters.
@@ -1454,11 +1455,11 @@ for (;;)
 
     /* Match a single character type; inline for speed */
 
-    case OP_ANY:
+    case OP_ANY:assert(FALSE);
     if (IS_NEWLINE(eptr)) RRETURN(MATCH_NOMATCH);
     /* Fall through */
 
-    case OP_ALLANY:
+    case OP_ALLANY:assert(FALSE);
     if (eptr++ >= md->end_subject) RRETURN(MATCH_NOMATCH);
     if (utf8) while (eptr < md->end_subject && (*eptr & 0xc0) == 0x80) eptr++;
     ecode++;
@@ -1467,12 +1468,12 @@ for (;;)
     /* Match a single byte, even in UTF-8 mode. This opcode really does match
     any byte, even newline, independent of the setting of PCRE_DOTALL. */
 
-    case OP_ANYBYTE:
+    case OP_ANYBYTE:assert(FALSE);
     if (eptr++ >= md->end_subject) RRETURN(MATCH_NOMATCH);
     ecode++;
     break;
 
-    case OP_NOT_DIGIT:
+    case OP_NOT_DIGIT:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1485,7 +1486,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_DIGIT:
+    case OP_DIGIT:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1498,7 +1499,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_NOT_WHITESPACE:
+    case OP_NOT_WHITESPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1511,7 +1512,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_WHITESPACE:
+    case OP_WHITESPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1524,7 +1525,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_NOT_WORDCHAR:
+    case OP_NOT_WORDCHAR:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1537,7 +1538,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_WORDCHAR:
+    case OP_WORDCHAR:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     if (
@@ -1550,7 +1551,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_ANYNL:
+    case OP_ANYNL:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     switch(c)
@@ -1574,7 +1575,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_NOT_HSPACE:
+    case OP_NOT_HSPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     switch(c)
@@ -1604,7 +1605,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_HSPACE:
+    case OP_HSPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     switch(c)
@@ -1634,7 +1635,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_NOT_VSPACE:
+    case OP_NOT_VSPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     switch(c)
@@ -1652,7 +1653,7 @@ for (;;)
     ecode++;
     break;
 
-    case OP_VSPACE:
+    case OP_VSPACE:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
     switch(c)
@@ -1674,8 +1675,8 @@ for (;;)
     /* Check the next character by Unicode property. We will get here only
     if the support is in the binary; otherwise a compile-time error occurs. */
 
-    case OP_PROP:
-    case OP_NOTPROP:
+    case OP_PROP:assert(FALSE);
+    case OP_NOTPROP:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
       {
@@ -1720,7 +1721,7 @@ for (;;)
     /* Match an extended Unicode sequence. We will get here only if the support
     is in the binary; otherwise a compile-time error occurs. */
 
-    case OP_EXTUNI:
+    case OP_EXTUNI:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     GETCHARINCTEST(c, eptr);
       {
@@ -1751,7 +1752,7 @@ for (;;)
     it as matched, any number of times (otherwise there could be infinite
     loops). */
 
-    case OP_REF:
+    case OP_REF:assert(FALSE);
       {
       offset = GET2(ecode, 1) << 1;               /* Doubled ref number */
       ecode += 3;
@@ -1875,8 +1876,8 @@ for (;;)
     following. Then obey similar code to character type repeats - written out
     again for speed. */
 
-    case OP_NCLASS:
-    case OP_CLASS:
+    case OP_NCLASS:assert(FALSE);
+    case OP_CLASS:assert(FALSE);
       {
       data = ecode + 1;                /* Save for matching */
       ecode += 33;                     /* Advance past the item */
@@ -2050,7 +2051,7 @@ for (;;)
     in UTF-8 mode, because that's the only time it is compiled. */
 
 #ifdef SUPPORT_UTF8
-    case OP_XCLASS:
+    case OP_XCLASS: assert(FALSE);
       {
       data = ecode + 1 + LINK_SIZE;                /* Save for matching */
       ecode += GET(ecode, 1);                      /* Advance past the item */
@@ -2143,7 +2144,7 @@ for (;;)
 
     /* Match a single character, casefully */
 
-    case OP_CHAR:
+    case OP_CHAR: 
 #ifdef SUPPORT_UTF8
     if (utf8)
       {
@@ -2166,7 +2167,7 @@ for (;;)
 
     /* Match a single character, caselessly */
 
-    case OP_CHARNC:
+    case OP_CHARNC:assert(FALSE);
 #ifdef SUPPORT_UTF8
     if (utf8)
       {
@@ -2217,45 +2218,45 @@ for (;;)
 
     /* Match a single character repeatedly. */
 
-    case OP_EXACT:
+    case OP_EXACT:assert(FALSE);
     min = max = GET2(ecode, 1);
     ecode += 3;
     goto REPEATCHAR;
 
-    case OP_POSUPTO:
+    case OP_POSUPTO:assert(FALSE);
     possessive = TRUE;
     /* Fall through */
 
-    case OP_UPTO:
-    case OP_MINUPTO:
+    case OP_UPTO:assert(FALSE);
+    case OP_MINUPTO:assert(FALSE);
     min = 0;
     max = GET2(ecode, 1);
     minimize = *ecode == OP_MINUPTO;
     ecode += 3;
     goto REPEATCHAR;
 
-    case OP_POSSTAR:
+    case OP_POSSTAR:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = INT_MAX;
     ecode++;
     goto REPEATCHAR;
 
-    case OP_POSPLUS:
+    case OP_POSPLUS:assert(FALSE);
     possessive = TRUE;
     min = 1;
     max = INT_MAX;
     ecode++;
     goto REPEATCHAR;
 
-    case OP_POSQUERY:
+    case OP_POSQUERY:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = 1;
     ecode++;
     goto REPEATCHAR;
 
-    case OP_STAR:
+    case OP_STAR: 
     case OP_MINSTAR:
     case OP_PLUS:
     case OP_MINPLUS:
@@ -2474,7 +2475,7 @@ for (;;)
     /* Match a negated single one-byte character. The character we are
     checking can be multibyte. */
 
-    case OP_NOT:
+    case OP_NOT:assert(FALSE);
     if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
     ecode++;
     GETCHARINCTEST(c, eptr);
@@ -2499,53 +2500,53 @@ for (;;)
     very much to the time taken, but character matching *is* what this is all
     about... */
 
-    case OP_NOTEXACT:
+    case OP_NOTEXACT:assert(FALSE);
     min = max = GET2(ecode, 1);
     ecode += 3;
     goto REPEATNOTCHAR;
 
-    case OP_NOTUPTO:
-    case OP_NOTMINUPTO:
+    case OP_NOTUPTO:assert(FALSE);
+    case OP_NOTMINUPTO:assert(FALSE);
     min = 0;
     max = GET2(ecode, 1);
     minimize = *ecode == OP_NOTMINUPTO;
     ecode += 3;
     goto REPEATNOTCHAR;
 
-    case OP_NOTPOSSTAR:
+    case OP_NOTPOSSTAR:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = INT_MAX;
     ecode++;
     goto REPEATNOTCHAR;
 
-    case OP_NOTPOSPLUS:
+    case OP_NOTPOSPLUS: assert(FALSE);
     possessive = TRUE;
     min = 1;
     max = INT_MAX;
     ecode++;
     goto REPEATNOTCHAR;
 
-    case OP_NOTPOSQUERY:
+    case OP_NOTPOSQUERY:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = 1;
     ecode++;
     goto REPEATNOTCHAR;
 
-    case OP_NOTPOSUPTO:
+    case OP_NOTPOSUPTO:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = GET2(ecode, 1);
     ecode += 3;
     goto REPEATNOTCHAR;
 
-    case OP_NOTSTAR:
-    case OP_NOTMINSTAR:
-    case OP_NOTPLUS:
-    case OP_NOTMINPLUS:
-    case OP_NOTQUERY:
-    case OP_NOTMINQUERY:
+    case OP_NOTSTAR: assert(FALSE);
+    case OP_NOTMINSTAR:assert(FALSE);
+    case OP_NOTPLUS:assert(FALSE);
+    case OP_NOTMINPLUS:assert(FALSE);
+    case OP_NOTQUERY:assert(FALSE);
+    case OP_NOTMINQUERY:assert(FALSE);
     c = *ecode++ - OP_NOTSTAR;
     minimize = (c & 1) != 0;
     min = rep_min[c];                 /* Pick up values from tables; */
@@ -2794,55 +2795,55 @@ for (;;)
     share code. This is very similar to the code for single characters, but we
     repeat it in the interests of efficiency. */
 
-    case OP_TYPEEXACT:
+    case OP_TYPEEXACT:assert(FALSE);
     min = max = GET2(ecode, 1);
     minimize = TRUE;
     ecode += 3;
     goto REPEATTYPE;
 
-    case OP_TYPEUPTO:
-    case OP_TYPEMINUPTO:
+    case OP_TYPEUPTO:assert(FALSE);
+    case OP_TYPEMINUPTO:assert(FALSE);
     min = 0;
     max = GET2(ecode, 1);
     minimize = *ecode == OP_TYPEMINUPTO;
     ecode += 3;
     goto REPEATTYPE;
 
-    case OP_TYPEPOSSTAR:
+    case OP_TYPEPOSSTAR:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = INT_MAX;
     ecode++;
     goto REPEATTYPE;
 
-    case OP_TYPEPOSPLUS:
+    case OP_TYPEPOSPLUS:assert(FALSE);
     possessive = TRUE;
     min = 1;
     max = INT_MAX;
     ecode++;
     goto REPEATTYPE;
 
-    case OP_TYPEPOSQUERY:
+    case OP_TYPEPOSQUERY:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = 1;
     ecode++;
     goto REPEATTYPE;
 
-    case OP_TYPEPOSUPTO:
+    case OP_TYPEPOSUPTO:assert(FALSE);
     possessive = TRUE;
     min = 0;
     max = GET2(ecode, 1);
     ecode += 3;
     goto REPEATTYPE;
 
-    case OP_TYPESTAR:
-    case OP_TYPEMINSTAR:
-    case OP_TYPEPLUS:
-    case OP_TYPEMINPLUS:
-    case OP_TYPEQUERY:
-    case OP_TYPEMINQUERY:
-    c = *ecode++ - OP_TYPESTAR;
+    case OP_TYPESTAR:assert(FALSE);
+    case OP_TYPEMINSTAR:assert(FALSE);
+    case OP_TYPEPLUS:assert(FALSE);
+    case OP_TYPEMINPLUS:assert(FALSE);
+    case OP_TYPEQUERY:assert(FALSE);
+    case OP_TYPEMINQUERY:assert(FALSE);
+    c = *ecode++ - OP_TYPESTAR;assert(FALSE);
     minimize = (c & 1) != 0;
     min = rep_min[c];                 /* Pick up values from tables; */
     max = rep_max[c];                 /* zero for max => infinity */
@@ -2973,7 +2974,7 @@ for (;;)
 #ifdef SUPPORT_UTF8
       if (utf8) switch(ctype)
         {
-        case OP_ANY:
+        case OP_ANY:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject || IS_NEWLINE(eptr))
@@ -2983,7 +2984,7 @@ for (;;)
           }
         break;
 
-        case OP_ALLANY:
+        case OP_ALLANY:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -2992,11 +2993,11 @@ for (;;)
           }
         break;
 
-        case OP_ANYBYTE:
+        case OP_ANYBYTE:assert(FALSE);
         eptr += min;
         break;
 
-        case OP_ANYNL:
+        case OP_ANYNL:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3022,7 +3023,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_HSPACE:
+        case OP_NOT_HSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3054,7 +3055,7 @@ for (;;)
           }
         break;
 
-        case OP_HSPACE:
+        case OP_HSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3086,7 +3087,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_VSPACE:
+        case OP_NOT_VSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3106,7 +3107,7 @@ for (;;)
           }
         break;
 
-        case OP_VSPACE:
+        case OP_VSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3126,7 +3127,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_DIGIT:
+        case OP_NOT_DIGIT:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3136,7 +3137,7 @@ for (;;)
           }
         break;
 
-        case OP_DIGIT:
+        case OP_DIGIT:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject ||
@@ -3146,7 +3147,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_WHITESPACE:
+        case OP_NOT_WHITESPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject ||
@@ -3156,7 +3157,7 @@ for (;;)
           }
         break;
 
-        case OP_WHITESPACE:
+        case OP_WHITESPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject ||
@@ -3166,7 +3167,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_WORDCHAR:
+        case OP_NOT_WORDCHAR:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject ||
@@ -3176,7 +3177,7 @@ for (;;)
           }
         break;
 
-        case OP_WORDCHAR:
+        case OP_WORDCHAR:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject ||
@@ -3199,7 +3200,7 @@ for (;;)
 
       switch(ctype)
         {
-        case OP_ANY:
+        case OP_ANY:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (IS_NEWLINE(eptr)) RRETURN(MATCH_NOMATCH);
@@ -3207,18 +3208,18 @@ for (;;)
           }
         break;
 
-        case OP_ALLANY:
+        case OP_ALLANY:assert(FALSE);
         eptr += min;
         break;
 
-        case OP_ANYBYTE:
+        case OP_ANYBYTE:assert(FALSE);
         eptr += min;
         break;
 
         /* Because of the CRLF case, we can't assume the minimum number of
         bytes are present in this case. */
 
-        case OP_ANYNL:
+        case OP_ANYNL:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3240,7 +3241,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_HSPACE:
+        case OP_NOT_HSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3255,7 +3256,7 @@ for (;;)
           }
         break;
 
-        case OP_HSPACE:
+        case OP_HSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3270,7 +3271,7 @@ for (;;)
           }
         break;
 
-        case OP_NOT_VSPACE:
+        case OP_NOT_VSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3287,7 +3288,7 @@ for (;;)
           }
         break;
 
-        case OP_VSPACE:
+        case OP_VSPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           {
           if (eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
@@ -3304,33 +3305,33 @@ for (;;)
           }
         break;
 
-        case OP_NOT_DIGIT:
+        case OP_NOT_DIGIT:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_digit) != 0) RRETURN(MATCH_NOMATCH);
         break;
 
-        case OP_DIGIT:
+        case OP_DIGIT:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_digit) == 0) RRETURN(MATCH_NOMATCH);
         break;
 
-        case OP_NOT_WHITESPACE:
+        case OP_NOT_WHITESPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_space) != 0) RRETURN(MATCH_NOMATCH);
         break;
 
-        case OP_WHITESPACE:
+        case OP_WHITESPACE:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_space) == 0) RRETURN(MATCH_NOMATCH);
         break;
 
-        case OP_NOT_WORDCHAR:
+        case OP_NOT_WORDCHAR:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_word) != 0)
             RRETURN(MATCH_NOMATCH);
         break;
 
-        case OP_WORDCHAR:
+        case OP_WORDCHAR:assert(FALSE);
         for (i = 1; i <= min; i++)
           if ((md->ctypes[*eptr++] & ctype_word) == 0)
             RRETURN(MATCH_NOMATCH);
