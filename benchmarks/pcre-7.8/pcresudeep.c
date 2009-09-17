@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <klee/klee.h>
 #include "pcre.h"
 
 const int OVECCOUNT = 30;
