@@ -176,3 +176,63 @@ Similarly, although no characters will be read from the given file --
 symbolic characters will be read instead -- a file argument must still
 be given.  And grep must be able to open this file.  /dev/null
 should always work.)
+
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== What do the numbers in the `branches` file mean? ==
+
+When `crestc` instruments a C file, a file named `branches` is produced.  The `branches` file contains the ID numbers for each branch in the instrumented program.
+
+The `branches` file consists of one or more _function entries_, which lists the branches contained in one function/procedure.  Each file entry has the format:
+{{{
+function_id N
+b1_then b1_else
+b2_then b2_else
+...
+bN_then bN_else
+}}}
+
+The first line of an entry contains a function ID number and the number `N` of remaining lines in the function entry -- `N` is the number of conditional statements in the corresponding function.  The `N` remaining lines each contain two branch ID's: one for the then/true branch of a conditional statement and one for the else/false branch of the conditional statement.
+
+For example, for the file:
+{{{
+void abs(int x) {
+    if (x < 0) {
+        return -x;    // ID 1
+    } else {
+        return x;    // ID 2
+    }
+}
+
+int main(void) {
+    int a;
+    CREST_int(a);
+
+    if (a < 0) {
+        // ID 3
+        if (abs(a) == a) {
+            printf("ERROR");  // ID 4  
+        else {
+            // ID 5
+        }
+    } else {
+        // ID 6
+    }
+
+    return 0;
+}
+}}}
+running `crestc` will yield a `branches` file with two function entries:
+{{{
+1 1    [start of entry 1]
+1 2
+2 2    [start of entry 2]
+3 6
+4 5
+}}}
