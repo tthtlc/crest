@@ -236,3 +236,39 @@ running `crestc` will yield a `branches` file with two function entries:
 3 6
 4 5
 }}}
+
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== What does the output of `crestc` mean? ==
+
+{{{
+... omitted ...
+19 Read 90 branches.
+20 Read 232 nodes.
+21 Wrote 145 branch edges.
+}}}
+
+The three numbers output by crestc are:
+
+  # "Branches": The number of conditional branches in the program.  A branch is the true or false side of a conditional statement, so this number is roughly twice the number of "if" statements in a program. (Other control flow, such as loops and "switch" statements, are translated in goto's and "if" statements.)  For example, the following program has 4 branches:
+{{{
+1:  if (x < 10) {
+2:      printf("Less than 10.\n");    // branch 1
+3:  } else {
+4:      // branch 2
+5:  }
+6:  while (y != 0) {
+7:      y--;    // branch 3
+8:  }
+9:  return 0;    // branch 4  [when y == 0]
+}}}
+  # "Nodes": This is the number of vertices in the program's control-flow graph.<br/><br/>
+  # "Branch edges":  The control-flow graph is refined by removing all nodes that are not branches (and adding edges so that this graph is properly connected).  The number of "branch edges" is the number of edges remaining in this refined graph.
+
+  For example, for the above program, the refined CFG has only 4 nodes: lines 2, 4, 7, and 9, with edges (2, 7), (2, 9), (4, 7), (4, 9), (7, 9). (More details on this transformation and the reasons for doing it can be found in our ASE paper: [http://www.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-123.pdf Burnim, Sen, "Heuristics for Scalable Dynamic Test Generation", ASE 2008].)
