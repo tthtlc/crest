@@ -249,9 +249,9 @@ running `crestc` will yield a `branches` file with two function entries:
 
 {{{
 ... omitted ...
-19 Read 90 branches.
-20 Read 232 nodes.
-21 Wrote 145 branch edges.
+Read 90 branches.
+Read 232 nodes.
+Wrote 145 branch edges.
 }}}
 
 The three numbers output by crestc are:
@@ -272,3 +272,24 @@ The three numbers output by crestc are:
   # "Branch edges":  The control-flow graph is refined by removing all nodes that are not branches (and adding edges so that this graph is properly connected).  The number of "branch edges" is the number of edges remaining in this refined graph.
 
   For example, for the above program, the refined CFG has only 4 nodes: lines 2, 4, 7, and 9, with edges (2, 7), (2, 9), (4, 7), (4, 9), (7, 9). (More details on this transformation and the reasons for doing it can be found in our ASE paper: [http://www.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-123.pdf Burnim, Sen, "Heuristics for Scalable Dynamic Test Generation", ASE 2008].)
+
+
+=== ===
+
+=== ===
+
+=== ===
+
+
+== What does the output of `run_crest` mean? ==
+
+{{{
+... omitted ...
+Iteration 3 (0s): covered 5 branches [1 reach funs, 88 reach branches].
+Iteration 4 (0s): covered 23 branches [1 reach funs, 88 reach branches].
+... omitted ...
+}}}
+
+Each iteration in `run_crest` consists of one run of the program under test.  In each iteration, the number of covered branches is simply the number of unique branches (as defined above) that have been encountered in any execution of the program under test from one of the iterations so far during this run of `run_crest`.
+
+To (very roughly) estimate the number of program branches that are reachable, we also report the number of unique functions from the program that have been encountered during concolic testing, and the sum of all of the branches in each of those functions.  (We use this feature for testing larger programs like Vim, with thousands of functions.  Depending on build and command-line options, many of these functions are not reachable and thus their branches should not be counted (in the denominator) when computing the coverage.
