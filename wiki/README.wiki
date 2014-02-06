@@ -1,6 +1,13 @@
+CREST is a concolic test generation tool for C.
 
+You can get the latest version of CREST, as well as news and
+announcements at CREST's homepage: http://jburnim.github.io/crest
 
-This page contains some basic information about setting-up and using CREST.  It contains roughly the same information as the README file distributed with CREST.
+If you want to cite CREST, please refer to the (short) paper: Burnim,
+Sen, "Heuristics for Dynamic Test Generation", Proceedings of the 23rd
+IEEE/ACM International Conference on Automated Software Engineering
+(ASE), 2008.
+
 
 = Preparing a program for CREST =
 
@@ -12,9 +19,12 @@ For simple, single-file programs, you can use the build script
 "bin/crestc" to instrument and compile your test program.
 
 CREST can be used to instrument multi-file programs, too --
-instructions will be added soon.  In the meantime, you can take a look
-at an example, instrumented form of grep-2.2, available at CREST's
-home page.  Contact jburnim@cs.berkeley.edu for details.
+instructions may be added later.  In the meantime, you can take a look
+at an example, instrumented form of grep-2.2, available at
+https://github.com/jburnim/crest/tree/master/benchmarks/grep-2.2 .
+For further information, please see this
+[https://groups.google.com/forum/#!topic/crest-users/KwgP9JkajOw post]
+on the CREST-users mailing list.
 
 
 = Running CREST =
@@ -55,6 +65,7 @@ around, some of which are temporary and some of which must be kept.
 In particular, "cfg_branches" and "branches" are output by the
 instrumentation process and are needed to run run_crest, and run_crest
 produces "coverage", a list of the ID's of all covered branches.
+
 
 = Setup =
 
