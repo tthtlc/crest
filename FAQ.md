@@ -1,0 +1,1 @@
+The CREST FAQ has moved to https://github.com/jburnim/crest/wiki/CREST-Frequently-Asked-Questions.
